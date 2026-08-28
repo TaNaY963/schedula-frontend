@@ -1,0 +1,305 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { getAvailableSlots } from "@/features/booking/api/slots";
+import type { TimeSlot, BookingStatus } from "@/features/booking/types";
+import { getDoctors } from "@/features/doctors/api/doctors";
+import type { Doctor } from "@/types/doctor";
+
+type Status = "loading" | "ready" | "error";
+
+export default function BookingPage() {
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [slots, setSlots] = useState<TimeSlot[]>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState("");
+  const [status, setStatus] = useState<Status>("loading");
+  const [bookingStatus, setBookingStatus] =
+    useState<BookingStatus>("idle");
+
+  useEffect(() => {
+    Promise.all([getDoctors(), getAvailableSlots()])
+      .then(([doctorData, slotData]) => {
+        setDoctors(doctorData);
+        setSlots(slotData);
+        setStatus("ready");
+      })
+      .catch(() => {
+        setStatus("error");
+      });
+  }, []);
+
+  const selectedDoctorData = doctors.find(
+    (doctor) => doctor.id === selectedDoctor,
+  );
+
+  const canConfirm =
+    selectedDoctor && selectedDate && selectedSlot;
+
+  function handleConfirm() {
+    if (!canConfirm) {
+      return;
+    }
+
+    setBookingStatus("confirming");
+
+    setTimeout(() => {
+      setBookingStatus("confirmed");
+    }, 600);
+  }
+
+  function handleReset() {
+    setSelectedDoctor("");
+    setSelectedDate("");
+    setSelectedSlot("");
+    setBookingStatus("idle");
+  }
+
+  if (status === "loading") {
+    return (
+      <main className="min-h-screen px-4 py-8 sm:px-8">
+        <div
+          className="mx-auto max-w-2xl animate-pulse"
+          aria-busy="true"
+          aria-label="Loading booking page"
+        >
+          <div className="h-8 w-48 rounded bg-stone-200" />
+          <div className="mt-6 h-96 rounded-xl bg-stone-200" />
+        </div>
+      </main>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <main className="min-h-screen px-4 py-8 sm:px-8">
+        <div className="mx-auto max-w-2xl">
+          <div
+            className="rounded-xl border border-red-200 bg-red-50 p-6"
+            role="alert"
+          >
+            <p className="font-medium text-red-800">
+              We couldn&apos;t load the booking information.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-3 text-sm font-semibold text-red-700 underline"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (bookingStatus === "confirmed") {
+    return (
+      <main className="min-h-screen px-4 py-8 sm:px-8">
+        <div className="mx-auto flex min-h-[80vh] max-w-2xl items-center">
+          <section
+            className="w-full rounded-xl border border-[var(--line)] bg-white p-8 text-center"
+            aria-labelledby="confirmation-title"
+          >
+            <div
+              className="mx-auto grid size-14 place-items-center rounded-full bg-emerald-100 text-2xl text-[var(--brand)]"
+              aria-hidden="true"
+            >
+              ✓
+            </div>
+
+            <h1
+              id="confirmation-title"
+              className="mt-5 text-2xl font-semibold"
+            >
+              Appointment confirmed
+            </h1>
+
+            <p className="mt-2 text-[var(--muted)]">
+              Your appointment has been successfully booked.
+            </p>
+
+            <div className="mx-auto mt-6 max-w-sm rounded-lg bg-stone-50 p-4 text-left text-sm">
+              <p>
+                <span className="text-[var(--muted)]">Doctor</span>
+                <br />
+                <span className="font-semibold">
+                  {selectedDoctorData?.name}
+                </span>
+              </p>
+
+              <p className="mt-4">
+                <span className="text-[var(--muted)]">Date</span>
+                <br />
+                <span className="font-semibold">{selectedDate}</span>
+              </p>
+
+              <p className="mt-4">
+                <span className="text-[var(--muted)]">Time</span>
+                <br />
+                <span className="font-semibold">
+                  {slots.find((slot) => slot.id === selectedSlot)?.time}
+                </span>
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleReset}
+              className="mt-6 rounded-lg bg-[var(--brand)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-deep)]"
+            >
+              Book another appointment
+            </button>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-2xl">
+        <header className="border-b border-[var(--line)] pb-7">
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 place-items-center rounded-xl bg-[var(--brand)] font-serif text-xl text-white">
+              S
+            </div>
+
+            <div>
+              <p className="text-lg font-semibold tracking-tight">
+                Schedula
+              </p>
+              <p className="text-sm text-[var(--muted)]">
+                Book an appointment
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <section className="py-8" aria-labelledby="booking-title">
+          <p className="text-sm font-medium text-[var(--brand)]">
+            Appointment
+          </p>
+
+          <h1
+            id="booking-title"
+            className="mt-2 text-3xl font-semibold tracking-tight"
+          >
+            Book a doctor
+          </h1>
+
+          <p className="mt-2 text-[var(--muted)]">
+            Select a doctor, date, and available time.
+          </p>
+        </section>
+
+        <section
+          className="rounded-xl border border-[var(--line)] bg-white p-5 sm:p-6"
+          aria-label="Appointment booking form"
+        >
+          <div>
+            <label
+              htmlFor="doctor"
+              className="block text-sm font-medium"
+            >
+              Select doctor
+            </label>
+
+            <select
+              id="doctor"
+              value={selectedDoctor}
+              onChange={(event) => {
+                setSelectedDoctor(event.target.value);
+                setSelectedSlot("");
+              }}
+              className="mt-2 w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
+            >
+              <option value="">Choose a doctor</option>
+
+              {doctors.map((doctor) => (
+                <option
+                  key={doctor.id}
+                  value={doctor.id}
+                  disabled={!doctor.available}
+                >
+                  {doctor.name} — {doctor.specialty}
+                  {!doctor.available ? " (Unavailable)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mt-6">
+            <label
+              htmlFor="date"
+              className="block text-sm font-medium"
+            >
+              Select date
+            </label>
+
+            <input
+              id="date"
+              type="date"
+              value={selectedDate}
+              min={new Date().toISOString().split("T")[0]}
+              onChange={(event) => {
+                setSelectedDate(event.target.value);
+                setSelectedSlot("");
+              }}
+              className="mt-2 w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
+            />
+          </div>
+
+          <div className="mt-6">
+            <p className="text-sm font-medium">
+              Available time
+            </p>
+
+            {!selectedDoctor || !selectedDate ? (
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                Select a doctor and date to see available times.
+              </p>
+            ) : (
+              <div
+                className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
+                role="group"
+                aria-label="Available appointment times"
+              >
+                {slots.map((slot) => (
+                  <button
+                    key={slot.id}
+                    type="button"
+                    disabled={!slot.available}
+                    aria-pressed={selectedSlot === slot.id}
+                    onClick={() => setSelectedSlot(slot.id)}
+                    className={`rounded-lg border px-3 py-2.5 text-sm font-medium ${
+                      selectedSlot === slot.id
+                        ? "border-[var(--brand)] bg-emerald-50 text-[var(--brand-deep)]"
+                        : "border-[var(--line)] hover:border-[var(--brand)]"
+                    } disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400`}
+                  >
+                    {slot.time}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            disabled={!canConfirm || bookingStatus === "confirming"}
+            onClick={handleConfirm}
+            className="mt-7 w-full rounded-lg bg-[var(--brand)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-deep)] disabled:cursor-not-allowed disabled:bg-stone-300"
+          >
+            {bookingStatus === "confirming"
+              ? "Confirming..."
+              : "Confirm appointment"}
+          </button>
+        </section>
+      </div>
+    </main>
+  );
+}
