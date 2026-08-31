@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import type { AvailabilitySlot } from "@/features/doctor-portal/availability/types";
 
 type Profile = {
   name: string;
@@ -27,6 +28,53 @@ const initialProfile: Profile = {
 export default function DoctorProfilePage() {
   const [profile, setProfile] = useState(initialProfile);
   const [saved, setSaved] = useState(false);
+  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  const [slotDate, setSlotDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [recurring, setRecurring] = useState(false);
+  const [recurrence, setRecurrence] = useState<"daily" | "weekly">("weekly");
+  const [slotError, setSlotError] = useState("");
+
+  function handleAddSlot(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+  setSlotError("");
+
+  if (!slotDate || !startTime || !endTime) {
+    setSlotError("Please select a date, start time, and end time.");
+    return;
+  }
+
+  if (startTime >= endTime) {
+    setSlotError("End time must be later than start time.");
+    return;
+  }
+
+  const newSlot: AvailabilitySlot = {
+    id: `slot-${Date.now()}`,
+    date: slotDate,
+    startTime,
+    endTime,
+    available: true,
+    recurring,
+    ...(recurring ? { recurrence } : {}),
+  };
+
+  setSlots((current) => [...current, newSlot]);
+
+  setSlotDate("");
+  setStartTime("");
+  setEndTime("");
+  setRecurring(false);
+  setRecurrence("weekly");
+}
+
+  useEffect(() => {
+  fetch("/api/availability")
+    .then((response) => response.json())
+    .then(({ data }) => setSlots(data))
+    .catch(() => setSlots([]));
+}, []);
 
   function updateField(field: keyof Profile, value: string) {
     setProfile((current) => ({
@@ -41,6 +89,10 @@ export default function DoctorProfilePage() {
     event.preventDefault();
     setSaved(true);
   }
+
+  function handleRemoveSlot(id: string) {
+  setSlots((current) => current.filter((slot) => slot.id !== id));
+}
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
@@ -161,6 +213,183 @@ export default function DoctorProfilePage() {
             Save changes
           </button>
         </form>
+
+
+        <section
+  className="mt-8 rounded-xl border border-[var(--line)] bg-white p-5 sm:p-8"
+  aria-labelledby="availability-title"
+>
+  <h2 id="availability-title" className="text-lg font-semibold">
+    Appointment availability
+  </h2>
+
+  <p className="mt-1 text-sm text-[var(--muted)]">
+    Create and manage the times when patients can book appointments.
+  </p>
+
+  <form onSubmit={handleAddSlot} className="mt-5 space-y-4">
+    <div>
+      <label
+        htmlFor="slot-date"
+        className="mb-2 block text-sm font-medium"
+      >
+        Date
+      </label>
+
+      <input
+        id="slot-date"
+        type="date"
+        value={slotDate}
+        min={new Date().toISOString().split("T")[0]}
+        onChange={(event) => setSlotDate(event.target.value)}
+        className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
+      />
+    </div>
+
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label
+          htmlFor="start-time"
+          className="mb-2 block text-sm font-medium"
+        >
+          Start time
+        </label>
+
+        <input
+          id="start-time"
+          type="time"
+          value={startTime}
+          onChange={(event) => setStartTime(event.target.value)}
+          className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="end-time"
+          className="mb-2 block text-sm font-medium"
+        >
+          End time
+        </label>
+
+        <input
+          id="end-time"
+          type="time"
+          value={endTime}
+          onChange={(event) => setEndTime(event.target.value)}
+          className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
+        />
+      </div>
+    </div>
+
+    <label className="flex items-center gap-3 text-sm">
+      <input
+        type="checkbox"
+        checked={recurring}
+        onChange={(event) => setRecurring(event.target.checked)}
+        className="size-4 rounded border-[var(--line)]"
+      />
+      Make this a recurring slot
+    </label>
+
+    {recurring && (
+      <div>
+        <label
+          htmlFor="recurrence"
+          className="mb-2 block text-sm font-medium"
+        >
+          Repeat
+        </label>
+
+        <select
+          id="recurrence"
+          value={recurrence}
+          onChange={(event) =>
+            setRecurrence(event.target.value as "daily" | "weekly")
+          }
+          className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
+        >
+          <option value="weekly">Weekly</option>
+          <option value="daily">Daily</option>
+        </select>
+      </div>
+    )}
+
+    {slotError && (
+      <p role="alert" className="text-sm text-red-600">
+        {slotError}
+      </p>
+    )}
+
+    <button
+      type="submit"
+      className="w-full rounded-lg bg-[var(--brand)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-deep)]"
+    >
+      Add availability
+    </button>
+  </form>
+</section>
+    <section
+  className="mt-8 rounded-xl border border-[var(--line)] bg-white p-5 sm:p-8"
+  aria-labelledby="existing-slots-title"
+>
+  <h2 id="existing-slots-title" className="text-lg font-semibold">
+    Existing availability
+  </h2>
+
+  <p className="mt-1 text-sm text-[var(--muted)]">
+    View and manage your current appointment slots.
+  </p>
+
+  {slots.length === 0 ? (
+    <p className="mt-5 text-sm text-[var(--muted)]">
+      No availability slots have been created yet.
+    </p>
+  ) : (
+    <ul className="mt-5 divide-y divide-[var(--line)]">
+      {slots.map((slot) => (
+        <li
+          key={slot.id}
+          className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <p className="font-medium">
+              {slot.date}
+            </p>
+
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              {slot.startTime} - {slot.endTime}
+            </p>
+
+            {slot.recurring && (
+              <p className="mt-1 text-xs font-medium text-[var(--brand)]">
+                Recurs {slot.recurrence}
+              </p>
+            )}
+          </div>
+
+          <span
+            className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
+              slot.available
+                ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+                : "bg-stone-100 text-stone-600 ring-stone-200"
+            }`}
+          >
+            {slot.available ? "Available" : "Booked"}
+
+            <button
+                type="button"
+                onClick={() => handleRemoveSlot(slot.id)}
+                className="w-fit rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-medium hover:border-red-300 hover:text-red-600"
+                >
+                Remove
+            </button>
+          </span>
+        </li>
+      ))}
+    </ul>
+  )}
+</section>
       </div>
     </main>
   );
