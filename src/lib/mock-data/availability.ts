@@ -1,0 +1,29 @@
+import type { AvailabilitySlot } from "@/features/doctor-portal/availability/types";
+
+export const availabilitySlots: AvailabilitySlot[] = [
+  {
+    id: "slot-001",
+    date: "2026-09-01",
+    startTime: "09:00",
+    endTime: "09:30",
+    available: true,
+    recurring: false,
+  },
+  {
+    id: "slot-002",
+    date: "2026-09-01",
+    startTime: "10:00",
+    endTime: "10:30",
+    available: true,
+    recurring: true,
+    recurrence: "weekly",
+  },
+  {
+    id: "slot-003",
+    date: "2026-09-02",
+    startTime: "11:00",
+    endTime: "11:30",
+    available: false,
+    recurring: false,
+  },
+];
