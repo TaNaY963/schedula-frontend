@@ -52,6 +52,7 @@ export default function DoctorProfilePage() {
 
   const newSlot: AvailabilitySlot = {
     id: `slot-${Date.now()}`,
+    doctorId: "doc-001",
     date: slotDate,
     startTime,
     endTime,

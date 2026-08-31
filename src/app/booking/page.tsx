@@ -1,4 +1,6 @@
 "use client";
+import { getAvailability } from "@/features/booking/api/availability";
+import type { AvailabilitySlot } from "@/features/doctor-portal/availability/types";
 
 import { useEffect, useState } from "react";
 import { getAvailableSlots } from "@/features/booking/api/slots";
@@ -14,25 +16,31 @@ export default function BookingPage() {
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
+  const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [status, setStatus] = useState<Status>("loading");
   const [bookingStatus, setBookingStatus] =
     useState<BookingStatus>("idle");
 
   useEffect(() => {
-    Promise.all([getDoctors(), getAvailableSlots()])
-      .then(([doctorData, slotData]) => {
-        setDoctors(doctorData);
-        setSlots(slotData);
-        setStatus("ready");
-      })
-      .catch(() => {
-        setStatus("error");
-      });
-  }, []);
+  Promise.all([getDoctors(), getAvailability()])
+    .then(([doctorData, availabilityData]) => {
+      setDoctors(doctorData);
+      setAvailability(availabilityData);
+      setStatus("ready");
+    })
+    .catch(() => {
+      setStatus("error");
+    });
+}, []);
 
   const selectedDoctorData = doctors.find(
     (doctor) => doctor.id === selectedDoctor,
   );
+  const doctorSlots = availability.filter(
+  (slot) =>
+    slot.doctorId === selectedDoctor &&
+    (!selectedDate || slot.date === selectedDate),
+);
 
   const canConfirm =
     selectedDoctor && selectedDate && selectedSlot;
@@ -268,22 +276,42 @@ export default function BookingPage() {
                 role="group"
                 aria-label="Available appointment times"
               >
-                {slots.map((slot) => (
-                  <button
-                    key={slot.id}
-                    type="button"
-                    disabled={!slot.available}
-                    aria-pressed={selectedSlot === slot.id}
-                    onClick={() => setSelectedSlot(slot.id)}
-                    className={`rounded-lg border px-3 py-2.5 text-sm font-medium ${
-                      selectedSlot === slot.id
-                        ? "border-[var(--brand)] bg-emerald-50 text-[var(--brand-deep)]"
-                        : "border-[var(--line)] hover:border-[var(--brand)]"
-                    } disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400`}
-                  >
-                    {slot.time}
-                  </button>
-                ))}
+                {doctorSlots.length === 0 ? (
+  <p className="mt-2 text-sm text-[var(--muted)]">
+    No available slots for this doctor on the selected date.
+  </p>
+) : (
+  <div
+    className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
+    role="group"
+    aria-label="Available appointment times"
+  >
+    {doctorSlots.map((slot) => (
+      <button
+  key={slot.id}
+  type="button"
+  disabled={!slot.available}
+  aria-pressed={selectedSlot === slot.id}
+  aria-label={`${slot.startTime} to ${slot.endTime}${
+    slot.available ? "" : " - unavailable"
+  }`}
+  onClick={() => setSelectedSlot(slot.id)}
+  className={`rounded-lg border px-3 py-2.5 text-sm font-medium ${
+    selectedSlot === slot.id
+      ? "border-[var(--brand)] bg-emerald-50 text-[var(--brand-deep)]"
+      : slot.available
+        ? "border-[var(--line)] hover:border-[var(--brand)]"
+        : "cursor-not-allowed border-[var(--line)] bg-stone-100 text-stone-400"
+  }`}
+>
+  {slot.startTime} - {slot.endTime}
+  {!slot.available && (
+    <span className="ml-1 text-xs">(Booked)</span>
+  )}
+</button>
+    ))}
+  </div>
+)}
               </div>
             )}
           </div>
