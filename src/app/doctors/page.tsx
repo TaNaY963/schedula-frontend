@@ -1,5 +1,6 @@
 "use client";
 
+import UserNav from "@/components/layout/UserNav";
 import { useEffect, useState } from "react";
 import DoctorCard from "@/features/doctors/components/DoctorCard";
 import { getDoctors } from "@/features/doctors/api/doctors";
@@ -23,6 +24,8 @@ export default function DoctorsPage() {
   }, []);
 
   return (
+    <>
+    <UserNav />
     <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-6xl">
         <header className="border-b border-[var(--line)] pb-7">
@@ -105,6 +108,6 @@ export default function DoctorsPage() {
           </section>
         )}
       </div>
-    </main>
+    </main></>
   );
 }
