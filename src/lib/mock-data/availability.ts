@@ -3,6 +3,7 @@ import type { AvailabilitySlot } from "@/features/doctor-portal/availability/typ
 export const availabilitySlots: AvailabilitySlot[] = [
   {
     id: "slot-001",
+    doctorId: "doc-001",
     date: "2026-09-01",
     startTime: "09:00",
     endTime: "09:30",
@@ -11,6 +12,7 @@ export const availabilitySlots: AvailabilitySlot[] = [
   },
   {
     id: "slot-002",
+    doctorId: "doc-001",
     date: "2026-09-01",
     startTime: "10:00",
     endTime: "10:30",
@@ -20,10 +22,20 @@ export const availabilitySlots: AvailabilitySlot[] = [
   },
   {
     id: "slot-003",
+    doctorId: "doc-002",
     date: "2026-09-02",
     startTime: "11:00",
     endTime: "11:30",
     available: false,
     recurring: false,
   },
+  {
+  id: "slot-004",
+  doctorId: "doc-002",
+  date: "2026-09-02",
+  startTime: "12:00",
+  endTime: "12:30",
+  available: true,
+  recurring: false,
+},
 ];
