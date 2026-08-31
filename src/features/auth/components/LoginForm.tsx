@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 type FormErrors = {
   email?: string;
@@ -9,6 +11,8 @@ type FormErrors = {
 };
 
 export default function LoginForm() {
+  const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -46,15 +50,16 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      // Mock authentication for the starter project.
       await new Promise((resolve) => setTimeout(resolve, 700));
 
-      setErrors({});
-      alert("Login successful!");
-    } catch {
-      setErrors({
-        form: "Unable to sign in. Please try again.",
-      });
+login({
+  id: "user-001",
+  name: "Tanay Pant",
+  email,
+  role: "user",
+});
+
+router.push("/doctors");
     } finally {
       setIsLoading(false);
     }
