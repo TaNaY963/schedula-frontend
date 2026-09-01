@@ -1,6 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { getUsers } from "@/lib/storage/users";
 
 type FormErrors = {
   email?: string;
@@ -9,6 +12,8 @@ type FormErrors = {
 };
 
 export default function LoginForm() {
+  const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -46,15 +51,29 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      // Mock authentication for the starter project.
-      await new Promise((resolve) => setTimeout(resolve, 700));
+      const users = getUsers();
 
-      setErrors({});
-      alert("Login successful!");
-    } catch {
-      setErrors({
-        form: "Unable to sign in. Please try again.",
-      });
+const user = users.find(
+  (item) =>
+    item.email.toLowerCase() === email.trim().toLowerCase() &&
+    item.password === password,
+);
+
+if (!user) {
+  setErrors({
+    form: "Invalid email or password.",
+  });
+  return;
+}
+
+login({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  role: "user",
+});
+
+router.push("/doctors");
     } finally {
       setIsLoading(false);
     }
