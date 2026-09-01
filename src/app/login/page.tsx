@@ -1,4 +1,5 @@
 import LoginForm from "@/features/auth/components/LoginForm";
+import Link from "next/link";
 
 export default function LoginPage() {
   return (
@@ -26,6 +27,15 @@ export default function LoginPage() {
           </div>
 
           <LoginForm />
+          <p className="mt-6 text-center text-sm text-[var(--muted)]">
+  Don&apos;t have an account?{" "}
+  <Link
+    href="/register"
+    className="font-semibold text-[var(--brand)] hover:text-[var(--brand-deep)]"
+  >
+    Create account
+  </Link>
+</p>
 
           <p className="mt-6 text-center text-xs text-[var(--muted)]">
             Schedula · Clinic operations

@@ -32,12 +32,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem(STORAGE_KEY);
+  const storedUser = localStorage.getItem(STORAGE_KEY);
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser) as AuthUser);
-    }
-  }, []);
+  if (storedUser) {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setUser(JSON.parse(storedUser) as AuthUser);
+  }
+}, []);
 
   function login(authUser: AuthUser) {
     setUser(authUser);

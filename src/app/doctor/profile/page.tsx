@@ -36,12 +36,17 @@ export default function DoctorProfilePage() {
   const [recurrence, setRecurrence] = useState<"daily" | "weekly">("weekly");
   const [slotError, setSlotError] = useState("");
 
-  function handleAddSlot(event: FormEvent<HTMLFormElement>) {
+
+async function handleAddSlot(
+  event: FormEvent<HTMLFormElement>,
+) {
   event.preventDefault();
   setSlotError("");
 
   if (!slotDate || !startTime || !endTime) {
-    setSlotError("Please select a date, start time, and end time.");
+    setSlotError(
+      "Please select a date, start time, and end time.",
+    );
     return;
   }
 
@@ -50,25 +55,46 @@ export default function DoctorProfilePage() {
     return;
   }
 
-  const newSlot: AvailabilitySlot = {
-    id: `slot-${Date.now()}`,
-    doctorId: "doc-001",
-    date: slotDate,
-    startTime,
-    endTime,
-    available: true,
-    recurring,
-    ...(recurring ? { recurrence } : {}),
-  };
+  try {
+    const response = await fetch("/api/availability", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        doctorId: "doc-001",
+        date: slotDate,
+        startTime,
+        endTime,
+        recurring,
+        recurrence: recurring ? recurrence : undefined,
+      }),
+    });
 
-  setSlots((current) => [...current, newSlot]);
+    const result = await response.json();
 
-  setSlotDate("");
-  setStartTime("");
-  setEndTime("");
-  setRecurring(false);
-  setRecurrence("weekly");
+    if (!response.ok) {
+      setSlotError(
+        result.error || "Unable to add availability.",
+      );
+      return;
+    }
+
+    setSlots((current) => [...current, result.data]);
+
+    setSlotDate("");
+    setStartTime("");
+    setEndTime("");
+    setRecurring(false);
+    setRecurrence("weekly");
+  } catch {
+    setSlotError(
+      "Unable to add availability. Please try again.",
+    );
+  }
 }
+
+
 
   useEffect(() => {
   fetch("/api/availability")
@@ -91,9 +117,39 @@ export default function DoctorProfilePage() {
     setSaved(true);
   }
 
-  function handleRemoveSlot(id: string) {
-  setSlots((current) => current.filter((slot) => slot.id !== id));
+  
+async function handleRemoveSlot(id: string) {
+  setSlotError("");
+
+  try {
+    const response = await fetch("/api/availability", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      setSlotError(
+        result.error || "Unable to remove availability.",
+      );
+      return;
+    }
+
+    setSlots((current) =>
+      current.filter((slot) => slot.id !== id),
+    );
+  } catch {
+    setSlotError(
+      "Unable to remove availability. Please try again.",
+    );
+  }
 }
+
+
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
@@ -377,15 +433,14 @@ export default function DoctorProfilePage() {
             }`}
           >
             {slot.available ? "Available" : "Booked"}
-
-            <button
+          </span>
+          <button
                 type="button"
                 onClick={() => handleRemoveSlot(slot.id)}
                 className="w-fit rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-medium hover:border-red-300 hover:text-red-600"
                 >
                 Remove
             </button>
-          </span>
         </li>
       ))}
     </ul>

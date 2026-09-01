@@ -8,3 +8,4 @@ export type AvailabilitySlot = {
   recurring: boolean;
   recurrence?: "daily" | "weekly";
 };
+

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { getUsers } from "@/lib/storage/users";
 
 type FormErrors = {
   email?: string;
@@ -50,12 +51,25 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 700));
+      const users = getUsers();
+
+const user = users.find(
+  (item) =>
+    item.email.toLowerCase() === email.trim().toLowerCase() &&
+    item.password === password,
+);
+
+if (!user) {
+  setErrors({
+    form: "Invalid email or password.",
+  });
+  return;
+}
 
 login({
-  id: "user-001",
-  name: "Tanay Pant",
-  email,
+  id: user.id,
+  name: user.name,
+  email: user.email,
   role: "user",
 });
 
