@@ -1,9 +1,10 @@
 "use client";
 import { getAvailability } from "@/features/booking/api/availability";
 import type { AvailabilitySlot } from "@/features/doctor-portal/availability/types";
+import { useAuth } from "@/context/AuthContext";
 
 import { useEffect, useState } from "react";
-import { getAvailableSlots } from "@/features/booking/api/slots";
+import { useRouter } from "next/navigation";
 import type { TimeSlot, BookingStatus } from "@/features/booking/types";
 import { getDoctors } from "@/features/doctors/api/doctors";
 import type { Doctor } from "@/types/doctor";
@@ -11,6 +12,8 @@ import type { Doctor } from "@/types/doctor";
 type Status = "loading" | "ready" | "error";
 
 export default function BookingPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState("");
@@ -22,39 +25,85 @@ export default function BookingPage() {
     useState<BookingStatus>("idle");
 
   useEffect(() => {
-  Promise.all([getDoctors(), getAvailability()])
-    .then(([doctorData, availabilityData]) => {
-      setDoctors(doctorData);
-      setAvailability(availabilityData);
-      setStatus("ready");
-    })
-    .catch(() => {
-      setStatus("error");
-    });
-}, []);
+    Promise.all([getDoctors(), getAvailability()])
+      .then(([doctorData, availabilityData]) => {
+        setDoctors(doctorData);
+        setAvailability(availabilityData);
+        setStatus("ready");
+      })
+      .catch(() => {
+        setStatus("error");
+      });
+  }, []);
 
   const selectedDoctorData = doctors.find(
     (doctor) => doctor.id === selectedDoctor,
   );
   const doctorSlots = availability.filter(
-  (slot) =>
-    slot.doctorId === selectedDoctor &&
-    (!selectedDate || slot.date === selectedDate),
-);
+    (slot) =>
+      slot.doctorId === selectedDoctor &&
+      (!selectedDate || slot.date === selectedDate),
+  );
 
   const canConfirm =
     selectedDoctor && selectedDate && selectedSlot;
 
-  function handleConfirm() {
-    if (!canConfirm) {
+  async function handleConfirm() {
+    if (!canConfirm || !user || !selectedDoctorData) {
+      return;
+    }
+
+    const selectedSlotData = doctorSlots.find(
+      (slot) => slot.id === selectedSlot,
+    );
+
+    if (!selectedSlotData) {
       return;
     }
 
     setBookingStatus("confirming");
 
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          doctorId: selectedDoctorData.id,
+          doctorName: selectedDoctorData.name,
+          patientId: user.id,
+          patientName: user.name,
+          date: selectedDate,
+          startTime: selectedSlotData.startTime,
+          endTime: selectedSlotData.endTime,
+          type: "in-person",
+          reason: "General consultation",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Unable to book appointment.",
+        );
+      }
+
       setBookingStatus("confirmed");
-    }, 600);
+
+      setTimeout(() => {
+        router.push("/user/appointments");
+      }, 800);
+    } catch (error) {
+      console.error("BOOKING ERROR:", error);
+      setBookingStatus("idle");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to book appointment.",
+      );
+    }
   }
 
   function handleReset() {
@@ -149,7 +198,9 @@ export default function BookingPage() {
                 <span className="text-[var(--muted)]">Time</span>
                 <br />
                 <span className="font-semibold">
-                  {slots.find((slot) => slot.id === selectedSlot)?.time}
+                  {doctorSlots.find((slot) => slot.id === selectedSlot)?.startTime}
+                  {" – "}
+                  {doctorSlots.find((slot) => slot.id === selectedSlot)?.endTime}
                 </span>
               </p>
             </div>
@@ -277,41 +328,39 @@ export default function BookingPage() {
                 aria-label="Available appointment times"
               >
                 {doctorSlots.length === 0 ? (
-  <p className="mt-2 text-sm text-[var(--muted)]">
-    No available slots for this doctor on the selected date.
-  </p>
-) : (
-  <div
-    className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
-    role="group"
-    aria-label="Available appointment times"
-  >
-    {doctorSlots.map((slot) => (
-      <button
-  key={slot.id}
-  type="button"
-  disabled={!slot.available}
-  aria-pressed={selectedSlot === slot.id}
-  aria-label={`${slot.startTime} to ${slot.endTime}${
-    slot.available ? "" : " - unavailable"
-  }`}
-  onClick={() => setSelectedSlot(slot.id)}
-  className={`rounded-lg border px-3 py-2.5 text-sm font-medium ${
-    selectedSlot === slot.id
-      ? "border-[var(--brand)] bg-emerald-50 text-[var(--brand-deep)]"
-      : slot.available
-        ? "border-[var(--line)] hover:border-[var(--brand)]"
-        : "cursor-not-allowed border-[var(--line)] bg-stone-100 text-stone-400"
-  }`}
->
-  {slot.startTime} - {slot.endTime}
-  {!slot.available && (
-    <span className="ml-1 text-xs">(Booked)</span>
-  )}
-</button>
-    ))}
-  </div>
-)}
+                  <p className="mt-2 text-sm text-[var(--muted)]">
+                    No available slots for this doctor on the selected date.
+                  </p>
+                ) : (
+                  <div
+                    className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
+                    role="group"
+                    aria-label="Available appointment times"
+                  >
+                    {doctorSlots.map((slot) => (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        disabled={!slot.available}
+                        aria-pressed={selectedSlot === slot.id}
+                        aria-label={`${slot.startTime} to ${slot.endTime}${slot.available ? "" : " - unavailable"
+                          }`}
+                        onClick={() => setSelectedSlot(slot.id)}
+                        className={`rounded-lg border px-3 py-2.5 text-sm font-medium ${selectedSlot === slot.id
+                          ? "border-[var(--brand)] bg-emerald-50 text-[var(--brand-deep)]"
+                          : slot.available
+                            ? "border-[var(--line)] hover:border-[var(--brand)]"
+                            : "cursor-not-allowed border-[var(--line)] bg-stone-100 text-stone-400"
+                          }`}
+                      >
+                        {slot.startTime} - {slot.endTime}
+                        {!slot.available && (
+                          <span className="ml-1 text-xs">(Booked)</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
