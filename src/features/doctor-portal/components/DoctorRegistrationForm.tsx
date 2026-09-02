@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { saveDoctor } from "@/lib/storage/doctors";
+
 type FormData = {
   name: string;
   email: string;
@@ -98,7 +100,7 @@ export default function DoctorRegistrationForm() {
     return next;
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const validationErrors = validateForm();
@@ -109,12 +111,27 @@ export default function DoctorRegistrationForm() {
     setIsSubmitting(true);
 
     try {
-      // Mock registration until a backend is available.
-      await new Promise((resolve) => setTimeout(resolve, 700));
+      saveDoctor({
+        id: `doc-${Date.now()}`,
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        specialty: form.specialty.trim(),
+        qualification: form.qualification.trim(),
+        experienceYears: Number(form.experienceYears),
+        registrationNumber: form.registrationNumber.trim(),
+        address: form.address.trim(),
+        password: form.password,
+      });
 
-      router.push("/doctor/login");
-    } catch {
-      setErrors({ form: "Registration failed. Please try again." });
+      router.push("/login?role=doctor");
+    } catch (error) {
+      setErrors({
+        form:
+          error instanceof Error
+            ? error.message
+            : "Registration failed. Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }

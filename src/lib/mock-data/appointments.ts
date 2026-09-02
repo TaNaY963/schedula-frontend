@@ -14,7 +14,7 @@ export const appointments: Appointment[] = [
     doctorId: "doc-001",
     doctorName: "Dr. Ananya Sharma",
 
-    patientId: "pat-001",
+    patientId: "user-1788345848958",
     patientName: "Rahul Mehta",
 
     date: "2026-09-02",
@@ -22,7 +22,7 @@ export const appointments: Appointment[] = [
     endTime: "10:30",
 
     type: "video",
-    status: "confirmed",
+    status: "upcoming",
 
     reason: "Regular health consultation",
 

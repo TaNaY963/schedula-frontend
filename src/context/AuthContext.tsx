@@ -20,6 +20,7 @@ export type AuthUser = {
 type AuthContextType = {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isReady: boolean;
   login: (user: AuthUser) => void;
   logout: () => void;
 };
@@ -30,15 +31,21 @@ const STORAGE_KEY = "schedula_current_user";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-  const storedUser = localStorage.getItem(STORAGE_KEY);
+    const storedUser = localStorage.getItem(STORAGE_KEY);
 
-  if (storedUser) {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUser(JSON.parse(storedUser) as AuthUser);
-  }
-}, []);
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser) as AuthUser);
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+
+    setIsReady(true);
+  }, []);
 
   function login(authUser: AuthUser) {
     setUser(authUser);
@@ -55,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAuthenticated: Boolean(user),
+        isReady,
         login,
         logout,
       }}
