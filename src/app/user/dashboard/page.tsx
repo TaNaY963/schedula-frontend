@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
+import RebookAppointmentLink from "@/features/booking/components/RebookAppointmentLink";
 import type { Appointment } from "@/types/appointment";
+import type { Prescription } from "@/types/prescription";
 
 type ApiResponse = {
     data: Appointment[];
@@ -61,20 +63,35 @@ function getStatusClasses(status: Appointment["status"]) {
 export default function UserDashboardPage() {
     const { user } = useAuth();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        async function loadAppointments() {
+        async function loadDashboardData() {
             try {
-                const response = await fetch("/api/appointments");
+                const [appointmentsResponse, prescriptionsResponse] =
+                    await Promise.all([
+                        fetch("/api/appointments"),
+                        user
+                            ? fetch(
+                                  `/api/prescriptions?patientId=${encodeURIComponent(user.id)}`,
+                              )
+                            : Promise.resolve(null),
+                    ]);
 
-                if (!response.ok) {
+                if (!appointmentsResponse.ok) {
                     throw new Error("Unable to load appointments.");
                 }
 
-                const result = (await response.json()) as ApiResponse;
+                const appointmentsResult =
+                    (await appointmentsResponse.json()) as ApiResponse;
 
-                setAppointments(result.data);
+                setAppointments(appointmentsResult.data);
+
+                if (prescriptionsResponse?.ok) {
+                    const prescriptionsResult = await prescriptionsResponse.json();
+                    setPrescriptions(prescriptionsResult.data ?? []);
+                }
             } catch (error) {
                 console.error(error);
             } finally {
@@ -82,8 +99,8 @@ export default function UserDashboardPage() {
             }
         }
 
-        loadAppointments();
-    }, []);
+        loadDashboardData();
+    }, [user]);
 
     const userAppointments = useMemo(() => {
         if (!user) {
@@ -109,6 +126,16 @@ export default function UserDashboardPage() {
             (appointment) => appointment.status === "completed",
         );
     }, [userAppointments]);
+
+    const userPrescriptions = useMemo(() => {
+        if (!user) {
+            return [];
+        }
+
+        return prescriptions.filter(
+            (prescription) => prescription.patientId === user.id,
+        );
+    }, [prescriptions, user]);
 
     const nextAppointment = upcomingAppointments[0];
 
@@ -151,7 +178,7 @@ export default function UserDashboardPage() {
 </header>
 
                 {/* Stats */}
-                <section className="mt-6 grid gap-4 sm:grid-cols-2">
+                <section className="mt-6 grid gap-4 sm:grid-cols-3">
                     <div className="rounded-xl border border-[var(--line)] bg-white p-5">
                         <p className="text-sm text-[var(--muted)]">
                             Upcoming appointments
@@ -183,6 +210,23 @@ export default function UserDashboardPage() {
                             className="mt-3 inline-block text-sm font-semibold text-[var(--brand)] hover:underline"
                         >
                             View history →
+                        </Link>
+                    </div>
+
+                    <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+                        <p className="text-sm text-[var(--muted)]">
+                            Prescriptions
+                        </p>
+
+                        <p className="mt-2 text-3xl font-semibold">
+                            {loading ? "—" : userPrescriptions.length}
+                        </p>
+
+                        <Link
+                            href="/user/prescriptions"
+                            className="mt-3 inline-block text-sm font-semibold text-[var(--brand)] hover:underline"
+                        >
+                            View prescriptions →
                         </Link>
                     </div>
                 </section>
@@ -302,22 +346,25 @@ export default function UserDashboardPage() {
                         ) : recentAppointments.length > 0 ? (
                             <ul className="divide-y divide-[var(--line)]">
                                 {recentAppointments.map((appointment) => (
-                                    <li key={appointment.id}>
+                                    <li
+                                        key={appointment.id}
+                                        className="flex flex-col gap-3 p-5 transition hover:bg-stone-50 sm:flex-row sm:items-center sm:justify-between"
+                                    >
                                         <Link
                                             href={`/user/appointments/${appointment.id}`}
-                                            className="flex flex-col gap-3 p-5 transition hover:bg-stone-50 sm:flex-row sm:items-center sm:justify-between"
+                                            className="min-w-0 flex-1"
                                         >
-                                            <div>
-                                                <p className="font-medium">
-                                                    {appointment.doctorName}
-                                                </p>
+                                            <p className="font-medium">
+                                                {appointment.doctorName}
+                                            </p>
 
-                                                <p className="mt-1 text-sm text-[var(--muted)]">
-                                                    {formatDate(appointment.date)} ·{" "}
-                                                    {formatTime(appointment.startTime)}
-                                                </p>
-                                            </div>
+                                            <p className="mt-1 text-sm text-[var(--muted)]">
+                                                {formatDate(appointment.date)} ·{" "}
+                                                {formatTime(appointment.startTime)}
+                                            </p>
+                                        </Link>
 
+                                        <div className="flex flex-wrap items-center gap-3">
                                             <span
                                                 className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
                                                     appointment.status,
@@ -325,7 +372,14 @@ export default function UserDashboardPage() {
                                             >
                                                 {appointment.status}
                                             </span>
-                                        </Link>
+
+                                            {appointment.status === "completed" && (
+                                                <RebookAppointmentLink
+                                                    appointment={appointment}
+                                                    className="text-sm font-semibold text-[var(--brand)] hover:underline"
+                                                />
+                                            )}
+                                        </div>
                                     </li>
                                 ))}
                             </ul>

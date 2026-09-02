@@ -5,10 +5,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { useAuth } from "@/context/AuthContext";
+import RebookAppointmentLink from "@/features/booking/components/RebookAppointmentLink";
+import PrescriptionDetails from "@/features/prescriptions/components/PrescriptionDetails";
 import type {
   Appointment,
   AppointmentStatus,
 } from "@/types/appointment";
+import type { Prescription } from "@/types/prescription";
 
 type ApiResponse = {
   data: Appointment[];
@@ -71,6 +74,8 @@ export default function UserAppointmentDetailsPage() {
 
   const [appointment, setAppointment] =
     useState<Appointment | null>(null);
+  const [prescription, setPrescription] =
+    useState<Prescription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -97,6 +102,17 @@ export default function UserAppointmentDetailsPage() {
         }
 
         setAppointment(foundAppointment);
+
+        const prescriptionsResponse = await fetch(
+          `/api/prescriptions?appointmentId=${encodeURIComponent(
+            foundAppointment.id,
+          )}&patientId=${encodeURIComponent(foundAppointment.patientId)}`,
+        );
+
+        if (prescriptionsResponse.ok) {
+          const prescriptionsResult = await prescriptionsResponse.json();
+          setPrescription(prescriptionsResult.data?.[0] ?? null);
+        }
       } catch (err) {
         console.error(err);
 
@@ -284,7 +300,32 @@ export default function UserAppointmentDetailsPage() {
               </button>
             </div>
           )}
+
+          {appointment.status === "completed" && (
+            <div className="flex justify-end border-t border-[var(--line)] p-6">
+              <RebookAppointmentLink appointment={appointment} />
+            </div>
+          )}
         </div>
+
+        <section className="mt-6 overflow-hidden rounded-xl border border-[var(--line)] bg-white">
+          <div className="border-b border-[var(--line)] p-6">
+            <h2 className="text-xl font-semibold">Prescription</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Issued by your doctor for this appointment.
+            </p>
+          </div>
+
+          <div className="p-6">
+            {prescription ? (
+              <PrescriptionDetails prescription={prescription} />
+            ) : (
+              <p className="text-sm text-[var(--muted)]">
+                No prescription has been added for this appointment yet.
+              </p>
+            )}
+          </div>
+        </section>
       </div>
     </main>
   );

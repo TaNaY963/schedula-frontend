@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import RebookAppointmentLink from "@/features/booking/components/RebookAppointmentLink";
 import type {
   Appointment,
   AppointmentStatus,
@@ -237,15 +238,14 @@ export default function UserAppointmentsPage() {
               <ul className="divide-y divide-[var(--line)]">
                 {filteredAppointments.map((appointment) => (
                   <li
-                  key={appointment.id}
-                  className="p-5 transition hover:bg-stone-50"
-                >
-                  <Link
-                    href={`/user/appointments/${appointment.id}`}
-                    className="block"
+                    key={appointment.id}
+                    className="p-5 transition hover:bg-stone-50"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="flex min-w-0 gap-4">
+                      <Link
+                        href={`/user/appointments/${appointment.id}`}
+                        className="flex min-w-0 flex-1 gap-4"
+                      >
                         <div className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--canvas)] font-semibold text-[var(--brand)]">
                           {appointment.doctorName
                             .split(" ")
@@ -292,9 +292,14 @@ export default function UserAppointmentsPage() {
                             </span>
                           </div>
                         </div>
-                      </div>
+                      </Link>
+
+                      {appointment.status === "completed" && (
+                        <RebookAppointmentLink
+                          appointment={appointment}
+                        />
+                      )}
                     </div>
-                    </Link>
                   </li>
                 ))}
               </ul>
