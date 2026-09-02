@@ -15,6 +15,71 @@ export async function GET() {
   });
 }
 
+// POST — Create a new appointment
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    const {
+      doctorId,
+      doctorName,
+      patientId,
+      patientName,
+      date,
+      startTime,
+      endTime,
+      type,
+      reason,
+    } = body;
+
+    if (
+      !doctorId ||
+      !doctorName ||
+      !patientId ||
+      !patientName ||
+      !date ||
+      !startTime ||
+      !endTime
+    ) {
+      return Response.json(
+        { error: "Missing required appointment details" },
+        { status: 400 },
+      );
+    }
+
+    const newAppointment = {
+      id: `apt-${Date.now()}`,
+      doctorId,
+      doctorName,
+      patientId,
+      patientName,
+      date,
+      startTime,
+      endTime,
+      type: type || "in-person",
+      status: "pending" as AppointmentStatus,
+      reason: reason || "General consultation",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    appointments.push(newAppointment);
+
+    return Response.json(
+      {
+        message: "Appointment booked successfully",
+        data: newAppointment,
+      },
+      { status: 201 },
+    );
+  } catch {
+    return Response.json(
+      { error: "Invalid request body" },
+      { status: 400 },
+    );
+  }
+}
+
 // PATCH — Update an appointment
 export async function PATCH(request: Request) {
   try {

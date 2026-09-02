@@ -83,7 +83,7 @@ export default function RegisterForm() {
 
     try {
       saveUser({
-        id: `user-${Date.now()}`,
+        id: "pat-001",
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,

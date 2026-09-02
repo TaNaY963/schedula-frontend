@@ -517,52 +517,51 @@ useEffect(() => {
                           </>
                         )}
 
-                        {(appointment.status === "confirmed" ||
-                          appointment.status === "upcoming") && (
-                          <>
-                            <Link
-                              href={`/doctor/appointments/${appointment.id}/reschedule`}
-                              className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm font-medium hover:border-[var(--brand)] hover:text-[var(--brand)]"
-                            >
-                              Reschedule
-                            </Link>
+{(appointment.status === "confirmed" ||
+  appointment.status === "upcoming") &&
+  !past && (
+    <>
+      <Link
+        href={`/doctor/appointments/${appointment.id}/reschedule`}
+        className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm font-medium hover:border-[var(--brand)] hover:text-[var(--brand)]"
+      >
+        Reschedule
+      </Link>
 
-                            <button
-                              type="button"
-                              disabled={isUpdating}
-                              onClick={() => handleCancel(appointment)}
-                              className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        )}
+      <button
+        type="button"
+        disabled={isUpdating}
+        onClick={() => handleCancel(appointment)}
+        className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Cancel
+      </button>
+    </>
+  )}
 
-                        {(appointment.status === "confirmed" ||
-                          appointment.status === "upcoming") &&
-                          past && (
-                            <>
-                              <button
-                                type="button"
-                                disabled={isUpdating}
-                                onClick={() =>
-                                  handleCompleted(appointment)
-                                }
-                                className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                Mark Completed
-                              </button>
+{(appointment.status === "confirmed" ||
+  appointment.status === "upcoming") &&
+  past && (
+    <>
+      <button
+        type="button"
+        disabled={isUpdating}
+        onClick={() => handleCompleted(appointment)}
+        className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isUpdating ? "Updating..." : "Mark Completed"}
+      </button>
 
-                              <button
-                                type="button"
-                                disabled={isUpdating}
-                                onClick={() => handleMissed(appointment)}
-                                className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                Mark Missed
-                              </button>
-                            </>
-                          )}
+      <button
+        type="button"
+        disabled={isUpdating}
+        onClick={() => handleMissed(appointment)}
+        className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Mark Missed
+      </button>
+    </>
+  )}
 
                         {appointment.status === "completed" && (
                           <Link

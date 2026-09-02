@@ -360,6 +360,104 @@ function getAvailableSlotsForDate(date: Date) {
         return !appointmentOverlaps;
     });
 }
+function findAvailableSlotForAppointment(
+    appointment: Appointment,
+    date: Date,
+) {
+    const dateString = formatDate(date);
+    const appointmentStart = timeToMinutes(
+        appointment.startTime,
+    );
+    const appointmentEnd = timeToMinutes(
+        appointment.endTime,
+    );
+    const duration = appointmentEnd - appointmentStart;
+
+    return availability.find((slot) => {
+        if (
+            slot.doctorId !== DOCTOR_ID ||
+            slot.date !== dateString
+        ) {
+            return false;
+        }
+
+        const slotStart = timeToMinutes(
+            slot.startTime,
+        );
+        const slotEnd = timeToMinutes(
+            slot.endTime,
+        );
+
+        return (
+            appointmentStart >= slotStart &&
+            appointmentStart + duration <= slotEnd
+        );
+    });
+}
+
+function findAvailableSlotForAppointment(
+    appointment: Appointment,
+    date: Date,
+) {
+    const dateString = formatDate(date);
+
+    const appointmentStart = timeToMinutes(
+        appointment.startTime,
+    );
+
+    const duration = appointmentDuration(
+        appointment,
+    );
+
+    const slots = availability
+        .filter(
+            (slot) =>
+                slot.doctorId === DOCTOR_ID &&
+                slot.date === dateString,
+        )
+        .filter((slot) => {
+            const slotStart = timeToMinutes(
+                slot.startTime,
+            );
+
+            const slotEnd = timeToMinutes(
+                slot.endTime,
+            );
+
+            return slotEnd - slotStart >= duration;
+        })
+        .sort(
+            (a, b) =>
+                timeToMinutes(a.startTime) -
+                timeToMinutes(b.startTime),
+        );
+
+    // First try the same time
+    const sameTimeSlot = slots.find(
+        (slot) =>
+            timeToMinutes(slot.startTime) ===
+            appointmentStart,
+    );
+
+    if (sameTimeSlot) {
+        return sameTimeSlot;
+    }
+
+    // Otherwise find the next available slot
+    const nextSlot = slots.find(
+        (slot) =>
+            timeToMinutes(slot.startTime) >
+            appointmentStart,
+    );
+
+    if (nextSlot) {
+        return nextSlot;
+    }
+
+    // If there is no later slot,
+    // use the first suitable slot of the day
+    return slots[0] ?? null;
+}
 
 async function rescheduleAppointment(
     appointment: Appointment,
@@ -466,7 +564,8 @@ async function rescheduleAppointment(
             },
         );
 
-        const result = await response.json();
+        const result =
+            await response.json();
 
         if (!response.ok) {
             throw new Error(
@@ -483,10 +582,9 @@ async function rescheduleAppointment(
             result.data.endTime,
         );
 
-        /*
-         * Update local appointment state.
-         * This immediately moves Rahul in the UI.
-         */
+        // Update local appointment state
+        // so the appointment immediately moves
+        // in the calendar UI.
         setAppointments((current) =>
             current.map((item) =>
                 item.id === appointment.id
@@ -494,15 +592,6 @@ async function rescheduleAppointment(
                     : item,
             ),
         );
-
-        /*
-         * IMPORTANT:
-         * We do NOT remove the availability object.
-         *
-         * Instead, getAvailableSlotsForDate()
-         * automatically hides it because the
-         * appointment now occupies that time.
-         */
 
         setActionMessage(
             `${appointment.patientName}'s appointment was rescheduled successfully.`,
@@ -899,270 +988,413 @@ return (
             {/* ========================= */}
 
             {view === "week" && (
-                <section className="mt-5 overflow-x-auto rounded-xl border border-[var(--line)] bg-white">
+    <section className="mt-5 overflow-x-auto rounded-xl border border-[var(--line)] bg-white">
+        <div className="grid min-w-[900px] grid-cols-7">
+            {weekDates.map((date) => {
+                const dayAppointments =
+                    getAppointmentsForDate(date);
 
-                    <div className="grid min-w-[900px] grid-cols-7">
+                const dayAvailability =
+                    getAvailableSlotsForDate(date);
 
-                        {weekDates.map((date) => {
-                            const dayAppointments =
-                                getAppointmentsForDate(
-                                    date,
-                                );
+                return (
+                    <div
+                        key={formatDate(date)}
+                        className="min-h-[500px] border-r border-[var(--line)] last:border-r-0"
+                        onDragOver={(event) => {
+                            if (!draggedAppointment) {
+                                return;
+                            }
 
-                            const dayAvailability =
-                                getAvailableSlotsForDate(
-                                    date,
-                                );
+                            event.preventDefault();
+                            event.dataTransfer.dropEffect =
+                                "move";
+                        }}
+                    >
+                        <div className="border-b border-[var(--line)] p-3 text-center">
+                            <p className="text-xs font-medium uppercase text-[var(--muted)]">
+                                {new Intl.DateTimeFormat(
+                                    "en-IN",
+                                    {
+                                        weekday: "short",
+                                    },
+                                ).format(date)}
+                            </p>
 
-                            return (
-                                <div
-                                    key={formatDate(
-                                        date,
-                                    )}
-                                    className="min-h-[500px] border-r border-[var(--line)] last:border-r-0"
-                                >
-                                    <div className="border-b border-[var(--line)] p-3 text-center">
+                            <p className="mt-1 text-lg font-semibold">
+                                {date.getDate()}
+                            </p>
+                        </div>
 
-                                        <p className="text-xs font-medium uppercase text-[var(--muted)]">
-                                            {new Intl.DateTimeFormat(
-                                                "en-IN",
-                                                {
-                                                    weekday:
-                                                        "short",
-                                                },
-                                            ).format(
-                                                date,
-                                            )}
-                                        </p>
+                        <div className="space-y-3 p-3">
+                            {/* Appointments */}
+                            {dayAppointments.map(
+                                (appointment) => (
+                                    <Link
+                                        key={appointment.id}
+                                        href={`/doctor/appointments/${appointment.id}`}
+                                        draggable={
+                                            appointment.status ===
+                                                "confirmed" ||
+                                            appointment.status ===
+                                                "upcoming"
+                                        }
+                                        onDragStart={(
+                                            event,
+                                        ) => {
+                                            event.dataTransfer.effectAllowed =
+                                                "move";
 
-                                        <p className="mt-1 text-lg font-semibold">
-                                            {date.getDate()}
-                                        </p>
-                                    </div>
+                                            event.dataTransfer.setData(
+                                                "text/plain",
+                                                appointment.id,
+                                            );
 
-                                    <div className="space-y-3 p-3">
-
-                                        {/* Appointments */}
-                                        {dayAppointments.map(
-                                            (
+                                            setDraggedAppointment(
                                                 appointment,
-                                            ) => (
-                                                <Link
-                                                    key={
-                                                        appointment.id
-                                                    }
-                                                    href={`/doctor/appointments/${appointment.id}`}
-                                                    className="block rounded-lg border border-emerald-200 bg-emerald-50 p-3 hover:border-[var(--brand)]"
-                                                >
-                                                    <p className="text-xs font-semibold text-emerald-800">
-                                                        {
-                                                            appointment.startTime
-                                                        }{" "}
-                                                        –{" "}
-                                                        {
-                                                            appointment.endTime
-                                                        }
-                                                    </p>
+                                            );
+                                        }}
+                                        onDragEnd={() => {
+                                            setDraggedAppointment(
+                                                null,
+                                            );
 
-                                                    <p className="mt-1 text-sm font-semibold">
-                                                        {
-                                                            appointment.patientName
-                                                        }
-                                                    </p>
+                                            setDragOverSlot(
+                                                null,
+                                            );
+                                        }}
+                                        className="block cursor-grab rounded-lg border border-emerald-200 bg-emerald-50 p-3 hover:border-[var(--brand)] active:cursor-grabbing"
+                                    >
+                                        <p className="text-xs font-semibold text-emerald-800">
+                                            {
+                                                appointment.startTime
+                                            }{" "}
+                                            –{" "}
+                                            {
+                                                appointment.endTime
+                                            }
+                                        </p>
 
-                                                    <p className="mt-1 text-xs capitalize text-[var(--muted)]">
-                                                        {
-                                                            appointment.status
-                                                        }
-                                                    </p>
-                                                </Link>
-                                            ),
-                                        )}
+                                        <p className="mt-1 text-sm font-semibold">
+                                            {
+                                                appointment.patientName
+                                            }
+                                        </p>
 
-                                        {/* Available slots */}
-                                        {dayAvailability.map(
-                                            (slot) => (
-                                                <div
-                                                    key={
-                                                        slot.id
-                                                    }
-                                                    className="rounded-lg border border-blue-200 bg-blue-50 p-3"
-                                                >
-                                                    <p className="text-xs font-semibold text-blue-800">
-                                                        {
-                                                            slot.startTime
-                                                        }{" "}
-                                                        –{" "}
-                                                        {
-                                                            slot.endTime
-                                                        }
-                                                    </p>
+                                        <p className="mt-1 text-xs capitalize text-[var(--muted)]">
+                                            {
+                                                appointment.status
+                                            }
+                                        </p>
+                                    </Link>
+                                ),
+                            )}
 
-                                                    <p className="mt-1 text-xs text-blue-700">
-                                                        Available
-                                                    </p>
-                                                </div>
-                                            ),
-                                        )}
+                            {/* Available slots */}
+                            {dayAvailability.map(
+                                (slot) => (
+                                    <div
+                                        key={slot.id}
+                                        onDragOver={(event) => {
+                                            if (
+                                                !draggedAppointment
+                                            ) {
+                                                return;
+                                            }
 
-                                        {dayAppointments.length ===
-                                            0 &&
-                                            dayAvailability.length ===
-                                                0 && (
-                                                <p className="pt-5 text-center text-xs text-[var(--muted)]">
-                                                    No schedule
-                                                </p>
-                                            )}
+                                            event.preventDefault();
+
+                                            event.dataTransfer.dropEffect =
+                                                "move";
+
+                                            setDragOverSlot(
+                                                slot.id,
+                                            );
+                                        }}
+                                        onDragLeave={() => {
+                                            setDragOverSlot(
+                                                null,
+                                            );
+                                        }}
+                                        onDrop={async (
+                                            event,
+                                        ) => {
+                                            event.preventDefault();
+
+                                            if (
+                                                !draggedAppointment
+                                            ) {
+                                                return;
+                                            }
+
+                                            await rescheduleAppointment(
+                                                draggedAppointment,
+                                                slot,
+                                            );
+
+                                            setDraggedAppointment(
+                                                null,
+                                            );
+
+                                            setDragOverSlot(
+                                                null,
+                                            );
+                                        }}
+                                        className={`cursor-default rounded-lg border border-blue-200 bg-blue-50 p-3 transition ${
+                                            dragOverSlot ===
+                                            slot.id
+                                                ? "bg-blue-100 ring-2 ring-blue-400"
+                                                : ""
+                                        }`}
+                                    >
+                                        <p className="text-xs font-semibold text-blue-800">
+                                            {
+                                                slot.startTime
+                                            }{" "}
+                                            –{" "}
+                                            {
+                                                slot.endTime
+                                            }
+                                        </p>
+
+                                        <p className="mt-1 text-xs text-blue-700">
+                                            Available
+                                        </p>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                ),
+                            )}
+
+                            {dayAppointments.length ===
+                                0 &&
+                                dayAvailability.length ===
+                                    0 && (
+                                    <p className="pt-5 text-center text-xs text-[var(--muted)]">
+                                        No schedule
+                                    </p>
+                                )}
+                        </div>
                     </div>
-                </section>
-            )}
+                );
+            })}
+        </div>
+    </section>
+)}
 
             {/* ========================= */}
             {/* MONTH VIEW */}
             {/* ========================= */}
 
             {view === "month" && (
-                <section className="mt-5 overflow-hidden rounded-xl border border-[var(--line)] bg-white">
+    <section className="mt-5 overflow-hidden rounded-xl border border-[var(--line)] bg-white">
+        <div className="grid grid-cols-7 border-b border-[var(--line)]">
+            {[
+                "Sun",
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat",
+            ].map((day) => (
+                <div
+                    key={day}
+                    className="p-3 text-center text-xs font-semibold text-[var(--muted)]"
+                >
+                    {day}
+                </div>
+            ))}
+        </div>
 
-                    <div className="grid grid-cols-7 border-b border-[var(--line)]">
+        <div className="grid grid-cols-7">
+            {monthDays.map((date, index) => {
+                if (!date) {
+                    return (
+                        <div
+                            key={`empty-${index}`}
+                            className="min-h-32 border-b border-r border-[var(--line)] bg-stone-50"
+                        />
+                    );
+                }
 
-                        {[
-                            "Sun",
-                            "Mon",
-                            "Tue",
-                            "Wed",
-                            "Thu",
-                            "Fri",
-                            "Sat",
-                        ].map((day) => (
-                            <div
-                                key={day}
-                                className="p-3 text-center text-xs font-semibold text-[var(--muted)]"
-                            >
-                                {day}
-                            </div>
-                        ))}
-                    </div>
+                const dayAppointments =
+                    getAppointmentsForDate(date);
 
-                    <div className="grid grid-cols-7">
+                const dayAvailability =
+                    getAvailableSlotsForDate(date);
 
-                        {monthDays.map(
-                            (date, index) => {
-                                if (!date) {
-                                    return (
-                                        <div
-                                            key={`empty-${index}`}
-                                            className="min-h-32 border-b border-r border-[var(--line)] bg-stone-50"
-                                        />
+                return (
+                    <div
+                        key={formatDate(date)}
+                        onDragOver={(event) => {
+                            if (!draggedAppointment) {
+                                return;
+                            }
+
+                            event.preventDefault();
+
+                            event.dataTransfer.dropEffect =
+                                "move";
+
+                            setDragOverSlot(
+                                formatDate(date),
+                            );
+                        }}
+                        onDragLeave={() => {
+                            setDragOverSlot(null);
+                        }}
+                        onDrop={async (event) => {
+                            event.preventDefault();
+
+                            if (
+                                !draggedAppointment
+                            ) {
+                                return;
+                            }
+
+                            const targetSlot =
+                                findAvailableSlotForAppointment(
+                                    draggedAppointment,
+                                    date,
+                                );
+
+                                if (!targetSlot) {
+                                    setActionError(
+                                        `No suitable available slot on ${formatDisplayDate(date)}.`,
                                     );
+                                
+                                    setDraggedAppointment(null);
+                                    setDragOverSlot(null);
+                                
+                                    return;
                                 }
 
-                                const dayAppointments =
-                                    getAppointmentsForDate(
-                                        date,
-                                    );
+                            await rescheduleAppointment(
+                                draggedAppointment,
+                                targetSlot,
+                            );
 
-                                const dayAvailability =
-                                    getAvailableSlotsForDate(
-                                        date,
-                                    );
+                            setDraggedAppointment(
+                                null,
+                            );
 
-                                return (
-                                    <button
-                                        key={formatDate(
-                                            date,
-                                        )}
-                                        type="button"
-                                        onClick={() => {
-                                            setSelectedDate(
-                                                date,
-                                            );
-
-                                            setView(
-                                                "day",
-                                            );
-                                        }}
-                                        className="min-h-32 border-b border-r border-[var(--line)] p-2 text-left hover:bg-stone-50"
-                                    >
-                                        <p className="text-sm font-semibold">
-                                            {date.getDate()}
-                                        </p>
-
-                                        <div className="mt-2 space-y-1">
-
-                                            {/* Appointments */}
-                                            {dayAppointments
-                                                .slice(
-                                                    0,
-                                                    2,
-                                                )
-                                                .map(
-                                                    (
-                                                        appointment,
-                                                    ) => (
-                                                        <div
-                                                            key={
-                                                                appointment.id
-                                                            }
-                                                            className="truncate rounded bg-emerald-50 px-2 py-1 text-xs text-emerald-800"
-                                                        >
-                                                            {
-                                                                appointment.startTime
-                                                            }{" "}
-                                                            {
-                                                                appointment.patientName
-                                                            }
-                                                        </div>
-                                                    ),
-                                                )}
-
-                                            {/* Available slots */}
-                                            {dayAvailability
-                                                .slice(
-                                                    0,
-                                                    2,
-                                                )
-                                                .map(
-                                                    (
-                                                        slot,
-                                                    ) => (
-                                                        <div
-                                                            key={
-                                                                slot.id
-                                                            }
-                                                            className="truncate rounded bg-blue-50 px-2 py-1 text-xs text-blue-700"
-                                                        >
-                                                            {
-                                                                slot.startTime
-                                                            }{" "}
-                                                            Available
-                                                        </div>
-                                                    ),
-                                                )}
-
-                                            {dayAppointments.length +
-                                                dayAvailability.length >
-                                                2 && (
-                                                <p className="text-xs text-[var(--muted)]">
-                                                    +
-                                                    {dayAppointments.length +
-                                                        dayAvailability.length -
-                                                        2}{" "}
-                                                    more
-                                                </p>
-                                            )}
-                                        </div>
-                                    </button>
+                            setDragOverSlot(null);
+                        }}
+                        onClick={() => {
+                            if (!draggedAppointment) {
+                                setSelectedDate(
+                                    date,
                                 );
-                            },
-                        )}
+
+                                setView("day");
+                            }
+                        }}
+                        className={`min-h-32 cursor-pointer border-b border-r border-[var(--line)] p-2 text-left transition hover:bg-stone-50 ${
+                            dragOverSlot ===
+                            formatDate(date)
+                                ? "bg-blue-50 ring-2 ring-inset ring-blue-400"
+                                : ""
+                        }`}
+                    >
+                        <p className="text-sm font-semibold">
+                            {date.getDate()}
+                        </p>
+
+                        <div className="mt-2 space-y-1">
+                            {/* Appointments */}
+                            {dayAppointments
+                                .slice(0, 2)
+                                .map(
+                                    (
+                                        appointment,
+                                    ) => (
+                                        <div
+                                            key={
+                                                appointment.id
+                                            }
+                                            draggable={
+                                                appointment.status ===
+                                                    "confirmed" ||
+                                                appointment.status ===
+                                                    "upcoming"
+                                            }
+                                            onDragStart={(
+                                                event,
+                                            ) => {
+                                                event.stopPropagation();
+
+                                                event.dataTransfer.effectAllowed =
+                                                    "move";
+
+                                                event.dataTransfer.setData(
+                                                    "text/plain",
+                                                    appointment.id,
+                                                );
+
+                                                setDraggedAppointment(
+                                                    appointment,
+                                                );
+                                            }}
+                                            onDragEnd={() => {
+                                                setDraggedAppointment(
+                                                    null,
+                                                );
+
+                                                setDragOverSlot(
+                                                    null,
+                                                );
+                                            }}
+                                            onClick={(
+                                                event,
+                                            ) => {
+                                                event.stopPropagation();
+                                            }}
+                                            className="cursor-grab truncate rounded bg-emerald-50 px-2 py-1 text-xs text-emerald-800 active:cursor-grabbing"
+                                        >
+                                            {
+                                                appointment.startTime
+                                            }{" "}
+                                            {
+                                                appointment.patientName
+                                            }
+                                        </div>
+                                    ),
+                                )}
+
+                            {/* Available slots */}
+                            {dayAvailability
+                                .slice(0, 2)
+                                .map((slot) => (
+                                    <div
+                                        key={
+                                            slot.id
+                                        }
+                                        className="truncate rounded bg-blue-50 px-2 py-1 text-xs text-blue-700"
+                                    >
+                                        {
+                                            slot.startTime
+                                        }{" "}
+                                        Available
+                                    </div>
+                                ))}
+
+                            {dayAppointments.length +
+                                dayAvailability.length >
+                                2 && (
+                                <p className="text-xs text-[var(--muted)]">
+                                    +
+                                    {dayAppointments.length +
+                                        dayAvailability.length -
+                                        2}{" "}
+                                    more
+                                </p>
+                            )}
+                        </div>
                     </div>
-                </section>
-            )}
+                );
+            })}
+        </div>
+    </section>
+)}
         </div>
     </main>
 );
