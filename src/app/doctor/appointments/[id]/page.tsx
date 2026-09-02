@@ -342,7 +342,10 @@ export default function DoctorAppointmentDetailsPage({
           </div>
 
           <div className="p-5">
-            <div className="flex items-center gap-4">
+            <Link
+              href={`/doctor/appointments/${appointment.id}/patient`}
+              className="flex items-center gap-4 rounded-lg p-2 transition hover:bg-stone-50"
+            >
               <div className="grid size-14 place-items-center rounded-full bg-[var(--canvas)] text-lg font-semibold text-[var(--brand)]">
                 {appointment.patientName
                   .split(" ")
@@ -361,7 +364,7 @@ export default function DoctorAppointmentDetailsPage({
                   Patient ID: {appointment.patientId}
                 </p>
               </div>
-            </div>
+            </Link>
           </div>
         </section>
 
