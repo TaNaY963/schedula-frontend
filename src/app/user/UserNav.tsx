@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { usePatientNotifications } from "@/features/notifications/PatientNotificationsProvider";
+
 const navItems = [
   {
     label: "Dashboard",
@@ -12,17 +14,22 @@ const navItems = [
     label: "Appointments",
     href: "/user/appointments",
   },
+  {
+    label: "Prescriptions",
+    href: "/user/prescriptions",
+  },
 ];
 
 export default function UserNav() {
   const pathname = usePathname();
+  const { unreadCount } = usePatientNotifications();
 
   return (
     <nav className="flex items-center gap-1">
-      {/* Dashboard */}
       {navItems.map((item) => {
         const isActive =
-          item.href === "/user/appointments"
+          item.href === "/user/appointments" ||
+          item.href === "/user/prescriptions"
             ? pathname.startsWith(item.href)
             : pathname === item.href;
 
@@ -41,12 +48,15 @@ export default function UserNav() {
         );
       })}
 
-      {/* Notifications */}
       <Link
         href="/user/notifications"
-        aria-label="Notifications"
+        aria-label={
+          unreadCount > 0
+            ? `Notifications, ${unreadCount} unread`
+            : "Notifications"
+        }
         title="Notifications"
-        className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
+        className={`relative flex h-9 w-9 items-center justify-center rounded-lg transition ${
           pathname === "/user/notifications"
             ? "bg-[var(--brand)] text-white shadow-sm"
             : "text-[var(--muted)] hover:bg-stone-100 hover:text-[var(--ink)]"
@@ -66,9 +76,14 @@ export default function UserNav() {
             d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9a6 6 0 1 0-12 0v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.6 1.09 5.454 1.31m5.715 0a24.255 24.255 0 0 1-5.715 0m5.715 0a3 3 0 1 1-5.715 0"
           />
         </svg>
+
+        {unreadCount > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
       </Link>
 
-      {/* Profile */}
       <Link
         href="/user/profile"
         aria-label="Profile"
