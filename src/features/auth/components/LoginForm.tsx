@@ -2,7 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import { useAuth } from "@/context/AuthContext";
+import type { UserRole } from "@/context/AuthContext";
+import { getDoctors } from "@/lib/storage/doctors";
 import { getUsers } from "@/lib/storage/users";
 
 type FormErrors = {
@@ -11,7 +14,7 @@ type FormErrors = {
   form?: string;
 };
 
-export default function LoginForm() {
+export default function LoginForm({ role }: { role: UserRole }) {
   const router = useRouter();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
@@ -51,29 +54,54 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const users = getUsers();
+      const normalizedEmail = email.trim().toLowerCase();
 
-const user = users.find(
-  (item) =>
-    item.email.toLowerCase() === email.trim().toLowerCase() &&
-    item.password === password,
-);
+      if (role === "doctor") {
+        const doctor = getDoctors().find(
+          (item) =>
+            item.email.toLowerCase() === normalizedEmail &&
+            item.password === password,
+        );
 
-if (!user) {
-  setErrors({
-    form: "Invalid email or password.",
-  });
-  return;
-}
+        if (!doctor) {
+          setErrors({
+            form: "Invalid doctor email or password.",
+          });
+          return;
+        }
 
-login({
-  id: user.id,
-  name: user.name,
-  email: user.email,
-  role: "user",
-});
+        login({
+          id: doctor.id,
+          name: doctor.name,
+          email: doctor.email,
+          role: "doctor",
+        });
 
-router.push("/doctors");
+        router.push("/doctor/dashboard");
+        return;
+      }
+
+      const user = getUsers().find(
+        (item) =>
+          item.email.toLowerCase() === normalizedEmail &&
+          item.password === password,
+      );
+
+      if (!user) {
+        setErrors({
+          form: "Invalid email or password.",
+        });
+        return;
+      }
+
+      login({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: "user",
+      });
+
+      router.push("/user/dashboard");
     } finally {
       setIsLoading(false);
     }
@@ -91,10 +119,7 @@ router.push("/doctors");
       )}
 
       <div>
-        <label
-          htmlFor="email"
-          className="mb-2 block text-sm font-medium"
-        >
+        <label htmlFor="email" className="mb-2 block text-sm font-medium">
           Email address
         </label>
 
@@ -112,7 +137,9 @@ router.push("/doctors");
               ? "border-red-400"
               : "border-[var(--line)] focus:border-[var(--brand)]"
           }`}
-          placeholder="you@example.com"
+          placeholder={
+            role === "doctor" ? "doctor@example.com" : "you@example.com"
+          }
         />
 
         {errors.email && (
@@ -124,10 +151,7 @@ router.push("/doctors");
 
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium"
-          >
+          <label htmlFor="password" className="block text-sm font-medium">
             Password
           </label>
 
@@ -170,7 +194,11 @@ router.push("/doctors");
         disabled={isLoading}
         className="w-full rounded-lg bg-[var(--brand)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-deep)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isLoading ? "Signing in..." : "Sign in"}
+        {isLoading
+          ? "Signing in..."
+          : role === "doctor"
+            ? "Sign in as doctor"
+            : "Sign in as patient"}
       </button>
     </form>
   );

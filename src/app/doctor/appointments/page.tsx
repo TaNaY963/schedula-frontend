@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+
 import type {
   Appointment,
   AppointmentStatus,
@@ -50,13 +51,13 @@ function formatStatus(status: AppointmentStatus) {
 function getStatusClasses(status: AppointmentStatus) {
   switch (status) {
     case "confirmed":
-      return "bg-emerald-50 text-emerald-800 ring-emerald-200";
+      return "bg-emerald-50 text-emerald-700 ring-emerald-200";
 
     case "pending":
-      return "bg-amber-50 text-amber-800 ring-amber-200";
+      return "bg-amber-50 text-amber-700 ring-amber-200";
 
     case "upcoming":
-      return "bg-blue-50 text-blue-800 ring-blue-200";
+      return "bg-blue-50 text-blue-700 ring-blue-200";
 
     case "completed":
       return "bg-slate-100 text-slate-700 ring-slate-200";
@@ -85,9 +86,11 @@ export default function DoctorAppointmentsPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+
   const [status, setStatus] = useState<
     "loading" | "ready" | "error"
   >("loading");
+
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   async function loadAppointments() {
@@ -110,41 +113,38 @@ export default function DoctorAppointmentsPage() {
     }
   }
 
+  useEffect(() => {
+    let cancelled = false;
 
-useEffect(() => {
-  let cancelled = false;
+    async function fetchAppointments() {
+      try {
+        const response = await fetch("/api/appointments");
 
-  async function fetchAppointments() {
-    try {
-      const response = await fetch("/api/appointments");
+        if (!response.ok) {
+          throw new Error("Unable to load appointments");
+        }
 
-      if (!response.ok) {
-        throw new Error("Unable to load appointments");
-      }
+        const result = (await response.json()) as ApiResponse;
 
-      const result = (await response.json()) as ApiResponse;
+        if (!cancelled) {
+          setAppointments(result.data);
+          setStatus("ready");
+        }
+      } catch (error) {
+        console.error(error);
 
-      if (!cancelled) {
-        setAppointments(result.data);
-        setStatus("ready");
-      }
-    } catch (error) {
-      console.error(error);
-
-      if (!cancelled) {
-        setStatus("error");
+        if (!cancelled) {
+          setStatus("error");
+        }
       }
     }
-  }
 
-  fetchAppointments();
+    fetchAppointments();
 
-  return () => {
-    cancelled = true;
-  };
-}, []);
-
-
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function updateAppointment(
     id: string,
@@ -194,9 +194,7 @@ useEffect(() => {
       `Decline the appointment with ${appointment.patientName}?`,
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     updateAppointment(appointment.id, {
       status: "cancelled",
@@ -208,9 +206,7 @@ useEffect(() => {
       `Cancel the appointment with ${appointment.patientName}?`,
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     updateAppointment(appointment.id, {
       status: "cancelled",
@@ -248,128 +244,301 @@ useEffect(() => {
     });
   }, [appointments, filter, search, dateFilter]);
 
+  const pendingCount = appointments.filter(
+    (appointment) => appointment.status === "pending",
+  ).length;
+
+  const confirmedCount = appointments.filter(
+    (appointment) =>
+      appointment.status === "confirmed" ||
+      appointment.status === "upcoming",
+  ).length;
+
+  const completedCount = appointments.filter(
+    (appointment) => appointment.status === "completed",
+  ).length;
+
+  function clearFilters() {
+    setSearch("");
+    setDateFilter("");
+    setFilter("all");
+  }
+
+  const hasActiveFilters =
+    search || dateFilter || filter !== "all";
+
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
+    <main className="min-h-screen bg-[var(--canvas)] px-4 py-6 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-7xl">
+
         {/* Header */}
-        <header className="border-b border-[var(--line)] pb-6">
+        <header className="flex items-center justify-between border-b border-[var(--line)] pb-5">
+          <Link
+            href="/doctor/dashboard"
+            className="flex items-center gap-3"
+          >
+            <div className="grid size-10 place-items-center rounded-xl bg-[var(--brand)] font-serif text-xl text-white">
+              S
+            </div>
+
+            <div>
+              <p className="text-lg font-semibold tracking-tight">
+                Schedula
+              </p>
+
+              <p className="text-sm text-[var(--muted)]">
+                Doctor portal
+              </p>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label="Notifications"
+              className="grid size-10 place-items-center rounded-full border border-[var(--line)] bg-white text-sm transition hover:border-[var(--brand)]"
+            >
+              •
+            </button>
+
+            <Link
+              href="/doctor/profile"
+              className="flex items-center gap-3 rounded-full border border-[var(--line)] bg-white py-1.5 pl-1.5 pr-4 transition hover:border-[var(--brand)]"
+            >
+              <div className="grid size-8 place-items-center rounded-full bg-[var(--brand)] text-xs font-semibold text-white">
+                AR
+              </div>
+
+              <div className="hidden sm:block">
+                <p className="text-sm font-medium">
+                  Dr. Anika Rao
+                </p>
+
+                <p className="text-xs text-[var(--muted)]">
+                  Doctor
+                </p>
+              </div>
+            </Link>
+          </div>
+        </header>
+
+        {/* Page heading */}
+        <section className="py-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-medium text-[var(--brand)]">
                 Doctor portal
               </p>
 
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
                 Appointments
               </h1>
 
-              <p className="mt-2 text-[var(--muted)]">
-                Manage your patient appointments and consultation schedule.
+              <p className="mt-2 max-w-2xl text-[var(--muted)]">
+                Manage your patient appointments and consultation
+                schedule.
               </p>
             </div>
 
             <Link
-              href="/doctor/dashboard"
-              className="w-fit rounded-lg border border-[var(--line)] bg-white px-4 py-2 text-sm font-medium hover:border-[var(--brand)] hover:text-[var(--brand)]"
+              href="/doctor/calendar"
+              className="inline-flex w-fit items-center rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
             >
-              ← Dashboard
+              Open calendar →
             </Link>
           </div>
-        </header>
+        </section>
+
+        {/* Summary cards */}
+        <section
+          className="grid gap-4 sm:grid-cols-3"
+          aria-label="Appointment summary"
+        >
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <p className="text-sm text-[var(--muted)]">
+              Total appointments
+            </p>
+
+            <p className="mt-2 text-3xl font-semibold tracking-tight">
+              {appointments.length}
+            </p>
+
+            <p className="mt-2 text-xs text-[var(--muted)]">
+              Across all statuses
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <p className="text-sm text-[var(--muted)]">
+              Pending
+            </p>
+
+            <p className="mt-2 text-3xl font-semibold tracking-tight">
+              {pendingCount}
+            </p>
+
+            <p className="mt-2 text-xs text-[var(--muted)]">
+              Appointments awaiting action
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <p className="text-sm text-[var(--muted)]">
+              Completed
+            </p>
+
+            <p className="mt-2 text-3xl font-semibold tracking-tight">
+              {completedCount}
+            </p>
+
+            <p className="mt-2 text-xs text-[var(--muted)]">
+              Successfully completed visits
+            </p>
+          </div>
+        </section>
 
         {/* Filters */}
-        <section className="mt-6 rounded-xl border border-[var(--line)] bg-white p-4">
-          <div className="flex flex-col gap-4">
-            {/* Status tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {filters.map((item) => (
+        <section className="mt-8 rounded-2xl border border-[var(--line)] bg-white p-5">
+          <div className="flex flex-col gap-5">
+
+            {/* Filter heading */}
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-semibold">
+                  Find appointments
+                </h2>
+
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  Filter by status, patient, reason, or date.
+                </p>
+              </div>
+
+              {hasActiveFilters && (
                 <button
-                  key={item.value}
                   type="button"
-                  onClick={() => setFilter(item.value)}
-                  className={`whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    filter === item.value
-                      ? "bg-[var(--brand)] text-white"
-                      : "border border-[var(--line)] bg-white text-[var(--muted)] hover:text-[var(--ink)]"
-                  }`}
+                  onClick={clearFilters}
+                  className="w-fit text-sm font-medium text-[var(--brand)] hover:underline"
                 >
-                  {item.label}
+                  Clear filters
                 </button>
-              ))}
+              )}
             </div>
 
-            {/* Search and date */}
-            <div className="grid gap-3 sm:grid-cols-2">
+            {/* Status filters */}
+            <div>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
+                Status
+              </p>
+
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {filters.map((item) => {
+                  const count =
+                    item.value === "all"
+                      ? appointments.length
+                      : appointments.filter(
+                          (appointment) =>
+                            appointment.status === item.value,
+                        ).length;
+
+                  return (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => setFilter(item.value)}
+                      className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium transition ${
+                        filter === item.value
+                          ? "bg-[var(--brand)] text-white"
+                          : "border border-[var(--line)] bg-white text-[var(--muted)] hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                      }`}
+                    >
+                      {item.label}
+
+                      <span
+                        className={`rounded-full px-1.5 py-0.5 text-[11px] ${
+                          filter === item.value
+                            ? "bg-white/15 text-white"
+                            : "bg-[var(--canvas)] text-[var(--muted)]"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Search + date */}
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label
                   htmlFor="appointment-search"
-                  className="mb-1.5 block text-sm font-medium"
+                  className="mb-2 block text-sm font-medium"
                 >
-                  Search
+                  Search patients
                 </label>
 
                 <input
                   id="appointment-search"
                   type="search"
                   value={search}
-                  onChange={(event) => setSearch(event.target.value)}
+                  onChange={(event) =>
+                    setSearch(event.target.value)
+                  }
                   placeholder="Search patient or reason..."
-                  className="w-full rounded-lg border border-[var(--line)] px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand)]"
+                  className="w-full rounded-xl border border-[var(--line)] bg-[var(--canvas)] px-4 py-3 text-sm outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--brand)] focus:bg-white"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="appointment-date"
-                  className="mb-1.5 block text-sm font-medium"
+                  className="mb-2 block text-sm font-medium"
                 >
-                  Date
+                  Appointment date
                 </label>
 
                 <input
                   id="appointment-date"
                   type="date"
                   value={dateFilter}
-                  onChange={(event) => setDateFilter(event.target.value)}
-                  className="w-full rounded-lg border border-[var(--line)] px-3 py-2.5 text-sm outline-none transition focus:border-[var(--brand)]"
+                  onChange={(event) =>
+                    setDateFilter(event.target.value)
+                  }
+                  className="w-full rounded-xl border border-[var(--line)] bg-[var(--canvas)] px-4 py-3 text-sm outline-none transition focus:border-[var(--brand)] focus:bg-white"
                 />
               </div>
             </div>
-
-            {(search || dateFilter || filter !== "all") && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearch("");
-                  setDateFilter("");
-                  setFilter("all");
-                }}
-                className="w-fit text-sm font-medium text-[var(--brand)] hover:underline"
-              >
-                Clear filters
-              </button>
-            )}
           </div>
         </section>
 
         {/* Appointment list */}
         <section
-          className="mt-6 overflow-hidden rounded-xl border border-[var(--line)] bg-white"
+          className="mt-6 overflow-hidden rounded-2xl border border-[var(--line)] bg-white"
           aria-labelledby="appointments-heading"
         >
-          <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
+          {/* List header */}
+          <div className="flex flex-col gap-2 border-b border-[var(--line)] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div>
-              <h2 id="appointments-heading" className="font-semibold">
+              <h2
+                id="appointments-heading"
+                className="text-lg font-semibold"
+              >
                 Appointment list
               </h2>
 
               <p className="mt-1 text-sm text-[var(--muted)]">
-                {filteredAppointments.length} result
+                Showing {filteredAppointments.length} result
                 {filteredAppointments.length !== 1 ? "s" : ""}
               </p>
             </div>
+
+            <span className="text-sm text-[var(--muted)]">
+              {confirmedCount} active
+            </span>
           </div>
 
+          {/* Loading */}
           {status === "loading" && (
             <div
               className="space-y-4 p-5"
@@ -379,411 +548,288 @@ useEffect(() => {
               {[1, 2, 3].map((item) => (
                 <div
                   key={item}
-                  className="h-32 animate-pulse rounded-lg bg-stone-100"
+                  className="h-36 animate-pulse rounded-xl bg-stone-100"
                 />
               ))}
             </div>
           )}
 
+          {/* Error */}
           {status === "error" && (
-            <div className="p-10 text-center" role="alert">
-              <p className="font-medium">
+            <div
+              className="p-12 text-center"
+              role="alert"
+            >
+              <div className="mx-auto grid size-12 place-items-center rounded-full bg-red-50 text-red-600">
+                !
+              </div>
+
+              <p className="mt-4 font-medium">
                 We couldn&apos;t load appointments.
+              </p>
+
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Please try again.
               </p>
 
               <button
                 type="button"
                 onClick={loadAppointments}
-                className="mt-3 text-sm font-semibold text-[var(--brand)] underline"
+                className="mt-4 rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
               >
                 Try again
               </button>
             </div>
           )}
 
-          {status === "ready" && filteredAppointments.length === 0 && (
-            <div className="p-10 text-center">
-              <p className="font-medium">
-                No appointments match your filters.
-              </p>
+          {/* Empty */}
+          {status === "ready" &&
+            filteredAppointments.length === 0 && (
+              <div className="p-12 text-center">
+                <div className="mx-auto grid size-12 place-items-center rounded-full bg-[var(--canvas)] text-[var(--brand)]">
+                  A
+                </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setSearch("");
-                  setDateFilter("");
-                  setFilter("all");
-                }}
-                className="mt-2 text-sm font-semibold text-[var(--brand)]"
-              >
-                Show all appointments
-              </button>
-            </div>
-          )}
+                <p className="mt-4 font-medium">
+                  No appointments found
+                </p>
 
-          {status === "ready" && filteredAppointments.length > 0 && (
-            <ul className="divide-y divide-[var(--line)]">
-              {filteredAppointments.map((appointment) => {
-                const isUpdating = updatingId === appointment.id;
-                const past = isPastAppointment(appointment);
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  Try changing your filters or search terms.
+                </p>
 
-                return (
-                  <li
-                    key={appointment.id}
-                    className="px-5 py-5 transition hover:bg-stone-50"
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="mt-4 text-sm font-semibold text-[var(--brand)] hover:underline"
                   >
-                    <div className="flex flex-col gap-5">
-                      {/* Main information */}
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="flex min-w-0 gap-4">
-                          {/* Avatar */}
-                          <div className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--canvas)] text-sm font-semibold text-[var(--brand)]">
-                            {appointment.patientName
-                              .split(" ")
-                              .map((name) => name[0])
-                              .join("")
-                              .slice(0, 2)
-                              .toUpperCase()}
-                          </div>
+                    Show all appointments
+                  </button>
+                )}
+              </div>
+            )}
 
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold">
-                                {appointment.patientName}
+          {/* Appointment list */}
+          {status === "ready" &&
+            filteredAppointments.length > 0 && (
+              <ul className="divide-y divide-[var(--line)]">
+                {filteredAppointments.map((appointment) => {
+                  const isUpdating =
+                    updatingId === appointment.id;
+
+                  const past =
+                    isPastAppointment(appointment);
+
+                  const initials = appointment.patientName
+                    .split(" ")
+                    .map((name) => name[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase();
+
+                  return (
+                    <li
+                      key={appointment.id}
+                      className="px-5 py-6 transition hover:bg-stone-50/70 sm:px-6"
+                    >
+                      <div className="flex flex-col gap-5">
+
+                        {/* Main appointment information */}
+                        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+
+                          <div className="flex min-w-0 gap-4">
+                            {/* Avatar */}
+                            <div className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--canvas)] text-sm font-semibold text-[var(--brand)]">
+                              {initials}
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="font-semibold">
+                                  {appointment.patientName}
+                                </p>
+
+                                <span
+                                  className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
+                                    appointment.status,
+                                  )}`}
+                                >
+                                  {formatStatus(
+                                    appointment.status,
+                                  )}
+                                </span>
+                              </div>
+
+                              <p className="mt-1 text-sm text-[var(--muted)]">
+                                {appointment.reason ||
+                                  "General consultation"}
                               </p>
 
-                              <span
-                                className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
-                                  appointment.status,
-                                )}`}
-                              >
-                                {formatStatus(appointment.status)}
-                              </span>
-                            </div>
+                              {/* Appointment metadata */}
+                              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
+                                <span>
+                                  {formatDate(
+                                    appointment.date,
+                                  )}
+                                </span>
 
-                            <p className="mt-1 text-sm text-[var(--muted)]">
-                              {appointment.reason || "General consultation"}
-                            </p>
+                                <span>
+                                  {formatTime(
+                                    appointment.startTime,
+                                  )}{" "}
+                                  –{" "}
+                                  {formatTime(
+                                    appointment.endTime,
+                                  )}
+                                </span>
 
-                            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-                              <span>
-                                📅 {formatDate(appointment.date)}
-                              </span>
-
-                              <span>
-                                🕐 {formatTime(appointment.startTime)} –{" "}
-                                {formatTime(appointment.endTime)}
-                              </span>
-
-                              <span>
-                                {appointment.type === "video"
-                                  ? "🎥 Video consultation"
-                                  : "🏥 In-person consultation"}
-                              </span>
+                                <span>
+                                  {appointment.type === "video"
+                                    ? "Video consultation"
+                                    : "In-person consultation"}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Details */}
-                        <Link
-                          href={`/doctor/appointments/${appointment.id}`}
-                          className="w-fit rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-medium hover:border-[var(--brand)] hover:text-[var(--brand)]"
-                        >
-                          View Details →
-                        </Link>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
-                        {appointment.status === "pending" && (
-                          <>
-                            <button
-                              type="button"
-                              disabled={isUpdating}
-                              onClick={() => handleConfirm(appointment)}
-                              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              {isUpdating ? "Updating..." : "Confirm"}
-                            </button>
-
-                            <button
-                              type="button"
-                              disabled={isUpdating}
-                              onClick={() => handleDecline(appointment)}
-                              className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              Decline
-                            </button>
-                          </>
-                        )}
-
-{(appointment.status === "confirmed" ||
-  appointment.status === "upcoming") &&
-  !past && (
-    <>
-      <Link
-        href={`/doctor/appointments/${appointment.id}/reschedule`}
-        className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm font-medium hover:border-[var(--brand)] hover:text-[var(--brand)]"
-      >
-        Reschedule
-      </Link>
-
-      <button
-        type="button"
-        disabled={isUpdating}
-        onClick={() => handleCancel(appointment)}
-        className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Cancel
-      </button>
-    </>
-  )}
-
-{(appointment.status === "confirmed" ||
-  appointment.status === "upcoming") &&
-  past && (
-    <>
-      <button
-        type="button"
-        disabled={isUpdating}
-        onClick={() => handleCompleted(appointment)}
-        className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {isUpdating ? "Updating..." : "Mark Completed"}
-      </button>
-
-      <button
-        type="button"
-        disabled={isUpdating}
-        onClick={() => handleMissed(appointment)}
-        className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Mark Missed
-      </button>
-    </>
-  )}
-
-                        {appointment.status === "completed" && (
+                          {/* View details */}
                           <Link
                             href={`/doctor/appointments/${appointment.id}`}
-                            className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm font-medium hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                            className="w-fit shrink-0 rounded-lg border border-[var(--line)] bg-white px-4 py-2 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
                           >
-                            View Completed Details
+                            View details →
                           </Link>
-                        )}
+                        </div>
 
-                        {(appointment.status === "cancelled" ||
-                          appointment.status === "missed") && (
-                          <span className="rounded-lg bg-stone-100 px-4 py-2 text-sm text-stone-600">
-                            Read-only appointment
-                          </span>
-                        )}
+                        {/* Actions */}
+                        <div className="flex flex-wrap items-center gap-2 border-t border-[var(--line)] pt-4">
+
+                          {appointment.status === "pending" && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={isUpdating}
+                                onClick={() =>
+                                  handleConfirm(
+                                    appointment,
+                                  )
+                                }
+                                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {isUpdating
+                                  ? "Updating..."
+                                  : "Confirm"}
+                              </button>
+
+                              <button
+                                type="button"
+                                disabled={isUpdating}
+                                onClick={() =>
+                                  handleDecline(
+                                    appointment,
+                                  )
+                                }
+                                className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                Decline
+                              </button>
+                            </>
+                          )}
+
+                          {(appointment.status ===
+                            "confirmed" ||
+                            appointment.status ===
+                              "upcoming") &&
+                            !past && (
+                              <>
+                                <Link
+                                  href={`/doctor/appointments/${appointment.id}/reschedule`}
+                                  className="rounded-lg border border-[var(--line)] bg-white px-4 py-2 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                                >
+                                  Reschedule
+                                </Link>
+
+                                <button
+                                  type="button"
+                                  disabled={isUpdating}
+                                  onClick={() =>
+                                    handleCancel(
+                                      appointment,
+                                    )
+                                  }
+                                  className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            )}
+
+                          {(appointment.status ===
+                            "confirmed" ||
+                            appointment.status ===
+                              "upcoming") &&
+                            past && (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={isUpdating}
+                                  onClick={() =>
+                                    handleCompleted(
+                                      appointment,
+                                    )
+                                  }
+                                  className="rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  {isUpdating
+                                    ? "Updating..."
+                                    : "Mark completed"}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  disabled={isUpdating}
+                                  onClick={() =>
+                                    handleMissed(
+                                      appointment,
+                                    )
+                                  }
+                                  className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  Mark missed
+                                </button>
+                              </>
+                            )}
+
+                          {appointment.status ===
+                            "completed" && (
+                            <Link
+                              href={`/doctor/appointments/${appointment.id}`}
+                              className="rounded-lg border border-[var(--line)] bg-white px-4 py-2 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                            >
+                              View completed details
+                            </Link>
+                          )}
+
+                          {(appointment.status ===
+                            "cancelled" ||
+                            appointment.status ===
+                              "missed") && (
+                            <span className="rounded-lg bg-stone-100 px-4 py-2 text-sm text-stone-600">
+                              Read-only appointment
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
         </section>
+
+        <div className="h-8" />
       </div>
     </main>
   );
 }
-
-
-
-
-// "use client";
-
-// import { useEffect, useMemo, useState } from "react";
-// import type {
-//   Appointment,
-//   AppointmentStatus,
-// } from "@/types/appointment";
-
-// type ApiResponse = {
-//   data: Appointment[];
-// };
-
-// type Filter = "all" | AppointmentStatus;
-
-// const statusStyles: Record<AppointmentStatus, string> = {
-//   confirmed: "bg-emerald-50 text-emerald-800 ring-emerald-200",
-//   pending: "bg-amber-50 text-amber-800 ring-amber-200",
-//   cancelled: "bg-stone-100 text-stone-600 ring-stone-200",
-// };
-
-// export default function DoctorAppointmentsPage() {
-//   const [appointments, setAppointments] = useState<Appointment[]>([]);
-//   const [filter, setFilter] = useState<Filter>("all");
-//   const [status, setStatus] = useState<
-//     "loading" | "ready" | "error"
-//   >("loading");
-
-//   useEffect(() => {
-//     fetch("/api/appointments")
-//       .then((response) => {
-//         if (!response.ok) {
-//           throw new Error("Unable to load appointments");
-//         }
-
-//         return response.json() as Promise<ApiResponse>;
-//       })
-//       .then(({ data }) => {
-//         setAppointments(data);
-//         setStatus("ready");
-//       })
-//       .catch(() => {
-//         setStatus("error");
-//       });
-//   }, []);
-
-//   const filteredAppointments = useMemo(() => {
-//     if (filter === "all") {
-//       return appointments;
-//     }
-
-//     return appointments.filter(
-//       (appointment) => appointment.status === filter,
-//     );
-//   }, [appointments, filter]);
-
-//   return (
-//     <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-//       <div className="mx-auto max-w-6xl">
-//         <header className="border-b border-[var(--line)] pb-6">
-//           <p className="text-sm font-medium text-[var(--brand)]">
-//             Doctor portal
-//           </p>
-
-//           <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-//             All Appointments
-//           </h1>
-
-//           <p className="mt-2 text-[var(--muted)]">
-//             View and filter your patient appointments.
-//           </p>
-//         </header>
-
-//         <section className="mt-8">
-//           <div className="flex flex-wrap gap-2">
-//             {(["all", "confirmed", "pending", "cancelled"] as Filter[]).map(
-//               (item) => (
-//                 <button
-//                   key={item}
-//                   type="button"
-//                   onClick={() => setFilter(item)}
-//                   className={`rounded-lg px-3 py-2 text-sm font-medium capitalize ${
-//                     filter === item
-//                       ? "bg-[var(--brand)] text-white"
-//                       : "border border-[var(--line)] bg-white text-[var(--muted)] hover:text-[var(--ink)]"
-//                   }`}
-//                 >
-//                   {item}
-//                 </button>
-//               ),
-//             )}
-//           </div>
-//         </section>
-
-//         <section
-//           className="mt-6 overflow-hidden rounded-xl border border-[var(--line)] bg-white"
-//           aria-labelledby="appointments-heading"
-//         >
-//           <h2 id="appointments-heading" className="sr-only">
-//             Appointments
-//           </h2>
-
-//           {status === "loading" && (
-//             <div
-//               className="space-y-4 p-5"
-//               aria-busy="true"
-//               aria-label="Loading appointments"
-//             >
-//               {[1, 2, 3].map((item) => (
-//                 <div
-//                   key={item}
-//                   className="h-20 animate-pulse rounded-lg bg-stone-100"
-//                 />
-//               ))}
-//             </div>
-//           )}
-
-//           {status === "error" && (
-//             <div className="p-8 text-center" role="alert">
-//               <p className="font-medium">
-//                 We couldn&apos;t load appointments.
-//               </p>
-
-//               <button
-//                 type="button"
-//                 onClick={() => window.location.reload()}
-//                 className="mt-3 text-sm font-semibold text-[var(--brand)] underline"
-//               >
-//                 Try again
-//               </button>
-//             </div>
-//           )}
-
-//           {status === "ready" &&
-//             filteredAppointments.length === 0 && (
-//               <div className="p-10 text-center">
-//                 <p className="font-medium">
-//                   No appointments match this filter.
-//                 </p>
-
-//                 <button
-//                   type="button"
-//                   onClick={() => setFilter("all")}
-//                   className="mt-2 text-sm font-semibold text-[var(--brand)]"
-//                 >
-//                   Show all appointments
-//                 </button>
-//               </div>
-//             )}
-
-//           {status === "ready" &&
-//             filteredAppointments.length > 0 && (
-//               <ul className="divide-y divide-[var(--line)]">
-//                 {filteredAppointments.map((appointment) => (
-//                   <li
-//                     key={appointment.id}
-//                     className="grid gap-4 px-5 py-5 md:grid-cols-[5rem_minmax(0,1fr)_auto] md:items-center"
-//                   >
-//                     <time className="text-sm font-medium text-[var(--muted)]">
-//                       {new Intl.DateTimeFormat("en", {
-//                         hour: "numeric",
-//                         minute: "2-digit",
-//                       }).format(new Date(appointment.startsAt))}
-//                     </time>
-
-//                     <div>
-//                       <p className="font-semibold">
-//                         {appointment.patient.name}
-//                       </p>
-
-//                       <p className="mt-1 text-sm text-[var(--muted)]">
-//                         {appointment.reason}
-//                       </p>
-
-//                       <p className="mt-1 text-sm text-[var(--muted)]">
-//                         {appointment.durationMinutes} min ·{" "}
-//                         {appointment.room}
-//                       </p>
-//                     </div>
-
-//                     <span
-//                       className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset ${statusStyles[appointment.status]}`}
-//                     >
-//                       {appointment.status}
-//                     </span>
-//                   </li>
-//                 ))}
-//               </ul>
-//             )}
-//         </section>
-//       </div>
-//     </main>
-//   );
-// }

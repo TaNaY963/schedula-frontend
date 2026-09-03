@@ -47,4 +47,14 @@ export const availabilitySlots: AvailabilitySlot[] = [
     available: true,
     recurring: false,
   },
+  {
+    id: "slot-002",
+    doctorId: "doc-001",
+    date: "2026-09-11",
+    startTime: "10:00",
+    endTime: "10:30",
+    available: true,
+    recurring: true,
+    recurrence: "weekly",
+  },
 ];

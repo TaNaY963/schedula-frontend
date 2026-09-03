@@ -1,19 +1,43 @@
 "use client";
 import { getAvailability } from "@/features/booking/api/availability";
+import { parseAppointmentType } from "@/features/booking/rebook";
 import type { AvailabilitySlot } from "@/features/doctor-portal/availability/types";
 import { useAuth } from "@/context/AuthContext";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { TimeSlot, BookingStatus } from "@/features/booking/types";
 import { getDoctors } from "@/features/doctors/api/doctors";
+import type { AppointmentType } from "@/types/appointment";
 import type { Doctor } from "@/types/doctor";
 
 type Status = "loading" | "ready" | "error";
 
 export default function BookingPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen px-4 py-8 sm:px-8">
+          <div
+            className="mx-auto max-w-2xl animate-pulse"
+            aria-busy="true"
+            aria-label="Loading booking page"
+          >
+            <div className="h-8 w-48 rounded bg-stone-200" />
+            <div className="mt-6 h-96 rounded-xl bg-stone-200" />
+          </div>
+        </main>
+      }
+    >
+      <BookingPageContent />
+    </Suspense>
+  );
+}
+
+function BookingPageContent() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState("");
@@ -23,6 +47,13 @@ export default function BookingPage() {
   const [status, setStatus] = useState<Status>("loading");
   const [bookingStatus, setBookingStatus] =
     useState<BookingStatus>("idle");
+  const isRebook = searchParams.get("rebook") === "1";
+  const preselectedDoctorId = searchParams.get("doctorId") ?? "";
+  const appointmentType: AppointmentType = parseAppointmentType(
+    searchParams.get("type"),
+  );
+  const appointmentReason =
+    searchParams.get("reason")?.trim() || "General consultation";
 
   useEffect(() => {
     Promise.all([getDoctors(), getAvailability()])
@@ -35,6 +66,20 @@ export default function BookingPage() {
         setStatus("error");
       });
   }, []);
+
+  useEffect(() => {
+    if (status !== "ready" || !preselectedDoctorId) {
+      return;
+    }
+
+    const doctorExists = doctors.some(
+      (doctor) => doctor.id === preselectedDoctorId,
+    );
+
+    if (doctorExists) {
+      setSelectedDoctor(preselectedDoctorId);
+    }
+  }, [status, doctors, preselectedDoctorId]);
 
   const selectedDoctorData = doctors.find(
     (doctor) => doctor.id === selectedDoctor,
@@ -77,8 +122,8 @@ export default function BookingPage() {
           date: selectedDate,
           startTime: selectedSlotData.startTime,
           endTime: selectedSlotData.endTime,
-          type: "in-person",
-          reason: "General consultation",
+          type: appointmentType,
+          reason: appointmentReason,
         }),
       });
 
@@ -176,7 +221,9 @@ export default function BookingPage() {
             </h1>
 
             <p className="mt-2 text-[var(--muted)]">
-              Your appointment has been successfully booked.
+              {isRebook
+                ? "Your follow-up appointment has been successfully booked."
+                : "Your appointment has been successfully booked."}
             </p>
 
             <div className="mx-auto mt-6 max-w-sm rounded-lg bg-stone-50 p-4 text-left text-sm">
@@ -232,7 +279,9 @@ export default function BookingPage() {
                 Schedula
               </p>
               <p className="text-sm text-[var(--muted)]">
-                Book an appointment
+                {isRebook
+                  ? "Rebook an appointment"
+                  : "Book an appointment"}
               </p>
             </div>
           </div>
@@ -247,11 +296,13 @@ export default function BookingPage() {
             id="booking-title"
             className="mt-2 text-3xl font-semibold tracking-tight"
           >
-            Book a doctor
+            {isRebook ? "Rebook this visit" : "Book a doctor"}
           </h1>
 
           <p className="mt-2 text-[var(--muted)]">
-            Select a doctor, date, and available time.
+            {isRebook
+              ? "Choose a new date and time with the same doctor, consultation type, and reason."
+              : "Select a doctor, date, and available time."}
           </p>
         </section>
 
@@ -259,6 +310,23 @@ export default function BookingPage() {
           className="rounded-xl border border-[var(--line)] bg-white p-5 sm:p-6"
           aria-label="Appointment booking form"
         >
+          {isRebook && (
+            <div className="mb-6 rounded-lg border border-[var(--line)] bg-[var(--canvas)] p-4 text-sm">
+              <p>
+                <span className="text-[var(--muted)]">Reason: </span>
+                <span className="font-medium">{appointmentReason}</span>
+              </p>
+              <p className="mt-2">
+                <span className="text-[var(--muted)]">Type: </span>
+                <span className="font-medium">
+                  {appointmentType === "video"
+                    ? "Video consultation"
+                    : "In-person consultation"}
+                </span>
+              </p>
+            </div>
+          )}
+
           <div>
             <label
               htmlFor="doctor"
@@ -373,7 +441,9 @@ export default function BookingPage() {
           >
             {bookingStatus === "confirming"
               ? "Confirming..."
-              : "Confirm appointment"}
+              : isRebook
+                ? "Confirm follow-up"
+                : "Confirm appointment"}
           </button>
         </section>
       </div>

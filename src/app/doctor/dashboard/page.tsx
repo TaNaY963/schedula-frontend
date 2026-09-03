@@ -1,143 +1,8 @@
-// import Link from "next/link";
-
-// const appointments = [
-//   {
-//     id: "apt-1042",
-//     patient: "Maya Patel",
-//     time: "09:00 AM",
-//     reason: "Follow-up consultation",
-//     status: "Confirmed",
-//   },
-//   {
-//     id: "apt-1043",
-//     patient: "Ethan Brooks",
-//     time: "10:00 AM",
-//     reason: "Annual wellness visit",
-//     status: "Pending",
-//   },
-//   {
-//     id: "apt-1044",
-//     patient: "Sofia Chen",
-//     time: "11:15 AM",
-//     reason: "Skin consultation",
-//     status: "Confirmed",
-//   },
-// ];
-
-// export default function DoctorDashboardPage() {
-//   return (
-//     <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-//       <div className="mx-auto max-w-6xl">
-//         <header className="flex flex-col gap-5 border-b border-[var(--line)] pb-6 sm:flex-row sm:items-center sm:justify-between">
-//           <div className="flex items-center gap-3">
-//             <div className="grid size-10 place-items-center rounded-xl bg-[var(--brand)] font-serif text-xl text-white">
-//               S
-//             </div>
-
-//             <div>
-//               <p className="text-lg font-semibold tracking-tight">
-//                 Schedula
-//               </p>
-//               <p className="text-sm text-[var(--muted)]">
-//                 Doctor portal
-//               </p>
-//             </div>
-//           </div>
-
-//           <p className="text-sm text-[var(--muted)]">
-//             Welcome, Dr. Anika Rao
-//           </p>
-//         </header>
-
-//         <section className="py-8">
-//           <p className="text-sm font-medium text-[var(--brand)]">
-//             Doctor dashboard
-//           </p>
-
-//           <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-//             Upcoming appointments
-//           </h1>
-
-//           <p className="mt-2 text-[var(--muted)]">
-//             Review today&apos;s visits and manage your clinic schedule.
-//           </p>
-//         </section>
-
-//         <section
-//           className="grid gap-5 md:grid-cols-2 lg:grid-cols-3"
-//           aria-label="Quick actions"
-//         >
-//           <Link
-//             href="/doctor/profile"
-//             className="rounded-xl border border-[var(--line)] bg-white p-5 hover:border-[var(--brand)]"
-//           >
-//             <p className="font-semibold">My Profile</p>
-//             <p className="mt-1 text-sm text-[var(--muted)]">
-//               View and update your doctor details and availability.
-//             </p>
-//           </Link>
-
-//           <Link
-//             href="/doctor/appointments"
-//             className="rounded-xl border border-[var(--line)] bg-white p-5 hover:border-[var(--brand)]"
-//           >
-//             <p className="font-semibold">View All Appointments</p>
-//             <p className="mt-1 text-sm text-[var(--muted)]">
-//               See your complete appointment schedule.
-//             </p>
-//           </Link>
-//         </section>
-
-//         <section
-//           className="mt-8 overflow-hidden rounded-xl border border-[var(--line)] bg-white"
-//           aria-labelledby="appointments-title"
-//         >
-//           <div className="border-b border-[var(--line)] px-5 py-4">
-//             <h2 id="appointments-title" className="font-semibold">
-//               Upcoming appointments
-//             </h2>
-//           </div>
-
-//           <ul className="divide-y divide-[var(--line)]">
-//             {appointments.map((appointment) => (
-//               <li
-//                 key={appointment.id}
-//                 className="grid gap-3 px-5 py-5 sm:grid-cols-[5rem_minmax(0,1fr)_auto] sm:items-center"
-//               >
-//                 <time className="text-sm font-medium text-[var(--muted)]">
-//                   {appointment.time}
-//                 </time>
-
-//                 <div>
-//                   <p className="font-semibold">{appointment.patient}</p>
-//                   <p className="mt-1 text-sm text-[var(--muted)]">
-//                     {appointment.reason}
-//                   </p>
-//                 </div>
-
-//                 <span
-//                   className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
-//                     appointment.status === "Confirmed"
-//                       ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
-//                       : "bg-amber-50 text-amber-800 ring-amber-200"
-//                   }`}
-//                 >
-//                   {appointment.status}
-//                 </span>
-//               </li>
-//             ))}
-//           </ul>
-//         </section>
-//       </div>
-//     </main>
-//   );
-// }
-
-
 "use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+
 import type { Appointment } from "@/types/appointment";
 
 export default function DoctorDashboardPage() {
@@ -203,7 +68,9 @@ export default function DoctorDashboardPage() {
   }
 
   function formatAppointmentType(type: Appointment["type"]) {
-    return type === "video" ? "Video consultation" : "In-person consultation";
+    return type === "video"
+      ? "Video consultation"
+      : "In-person consultation";
   }
 
   function formatStatus(status: Appointment["status"]) {
@@ -213,25 +80,39 @@ export default function DoctorDashboardPage() {
   function getStatusClasses(status: Appointment["status"]) {
     switch (status) {
       case "confirmed":
-        return "bg-emerald-50 text-emerald-800 ring-emerald-200";
+        return "bg-emerald-50 text-emerald-700 ring-emerald-200";
 
       case "pending":
-        return "bg-amber-50 text-amber-800 ring-amber-200";
+        return "bg-amber-50 text-amber-700 ring-amber-200";
 
       case "upcoming":
-        return "bg-blue-50 text-blue-800 ring-blue-200";
+        return "bg-blue-50 text-blue-700 ring-blue-200";
 
       default:
         return "bg-gray-50 text-gray-700 ring-gray-200";
     }
   }
 
+  const pendingCount = appointments.filter(
+    (appointment) => appointment.status === "pending"
+  ).length;
+
+  const confirmedCount = appointments.filter(
+    (appointment) =>
+      appointment.status === "confirmed" ||
+      appointment.status === "upcoming"
+  ).length;
+
+  const videoCount = appointments.filter(
+    (appointment) => appointment.type === "video"
+  ).length;
+
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-6xl">
+    <main className="min-h-screen bg-[var(--canvas)] px-4 py-6 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <header className="flex flex-col gap-5 border-b border-[var(--line)] pb-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
+        <header className="flex items-center justify-between border-b border-[var(--line)] pb-5">
+          <Link href="/doctor/dashboard" className="flex items-center gap-3">
             <div className="grid size-10 place-items-center rounded-xl bg-[var(--brand)] font-serif text-xl text-white">
               S
             </div>
@@ -245,80 +126,254 @@ export default function DoctorDashboardPage() {
                 Doctor portal
               </p>
             </div>
-          </div>
+          </Link>
 
-          <p className="text-sm text-[var(--muted)]">
-            Welcome, Dr. Anika Rao
-          </p>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label="Notifications"
+              className="grid size-10 place-items-center rounded-full border border-[var(--line)] bg-white text-lg transition hover:border-[var(--brand)]"
+            >
+              ♧
+            </button>
+
+            <Link
+              href="/doctor/profile"
+              className="flex items-center gap-3 rounded-full border border-[var(--line)] bg-white py-1.5 pl-1.5 pr-4 transition hover:border-[var(--brand)]"
+            >
+              <div className="grid size-8 place-items-center rounded-full bg-[var(--brand)] text-xs font-semibold text-white">
+                AR
+              </div>
+
+              <div className="hidden sm:block">
+                <p className="text-sm font-medium">Dr. Anika Rao</p>
+                <p className="text-xs text-[var(--muted)]">
+                  Doctor
+                </p>
+              </div>
+            </Link>
+          </div>
         </header>
 
-        {/* Page heading */}
+        {/* Welcome section */}
         <section className="py-8">
-          <p className="text-sm font-medium text-[var(--brand)]">
-            Doctor dashboard
-          </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-[var(--brand)]">
+                Doctor dashboard
+              </p>
 
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Upcoming appointments
-          </h1>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+                Good morning, Dr. Anika
+              </h1>
 
-          <p className="mt-2 text-[var(--muted)]">
-            Review upcoming visits and manage your clinic schedule.
-          </p>
+              <p className="mt-2 max-w-2xl text-[var(--muted)]">
+                Here&apos;s an overview of your appointments and clinic
+                schedule.
+              </p>
+            </div>
+
+            <Link
+              href="/doctor/calendar"
+              className="inline-flex w-fit items-center rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+            >
+              Open calendar →
+            </Link>
+          </div>
         </section>
 
-        {/* Quick actions */}
+        {/* Statistics */}
         <section
-          className="grid gap-5 md:grid-cols-2"
-          aria-label="Quick actions"
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          aria-label="Appointment statistics"
         >
-          <Link
-            href="/doctor/profile"
-            className="rounded-xl border border-[var(--line)] bg-white p-5 transition hover:border-[var(--brand)] hover:shadow-sm"
-          >
-            <p className="font-semibold">My Profile</p>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-[var(--muted)]">
+                  Upcoming
+                </p>
 
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              View and update your doctor details and availability.
+                <p className="mt-2 text-3xl font-semibold tracking-tight">
+                  {appointments.length}
+                </p>
+              </div>
+
+              <div className="grid size-10 place-items-center rounded-xl bg-blue-50 text-[var(--brand)]">
+                A
+              </div>
+            </div>
+
+            <p className="mt-3 text-xs text-[var(--muted)]">
+              Scheduled appointments
             </p>
-          </Link>
+          </div>
 
-          <Link
-            href="/doctor/appointments"
-            className="rounded-xl border border-[var(--line)] bg-white p-5 transition hover:border-[var(--brand)] hover:shadow-sm"
-          >
-            <p className="font-semibold">View All Appointments</p>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-[var(--muted)]">
+                  Pending
+                </p>
 
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              See your complete appointment schedule.
+                <p className="mt-2 text-3xl font-semibold tracking-tight">
+                  {pendingCount}
+                </p>
+              </div>
+
+              <div className="grid size-10 place-items-center rounded-xl bg-amber-50 text-amber-700">
+                P
+              </div>
+            </div>
+
+            <p className="mt-3 text-xs text-[var(--muted)]">
+              Need your attention
             </p>
-          </Link>
+          </div>
 
-          <Link
-            href="/doctor/calendar"
-            className="rounded-xl border border-[var(--line)] bg-white p-5 hover:border-[var(--brand)]"
-          >
-            <p className="font-semibold">Calendar</p>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              View appointments and manage your availability.
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-[var(--muted)]">
+                  Confirmed
+                </p>
+
+                <p className="mt-2 text-3xl font-semibold tracking-tight">
+                  {confirmedCount}
+                </p>
+              </div>
+
+              <div className="grid size-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700">
+                ✓
+              </div>
+            </div>
+
+            <p className="mt-3 text-xs text-[var(--muted)]">
+              Confirmed visits
             </p>
-          </Link>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-[var(--muted)]">
+                  Video visits
+                </p>
+
+                <p className="mt-2 text-3xl font-semibold tracking-tight">
+                  {videoCount}
+                </p>
+              </div>
+
+              <div className="grid size-10 place-items-center rounded-xl bg-purple-50 text-purple-700">
+                V
+              </div>
+            </div>
+
+            <p className="mt-3 text-xs text-[var(--muted)]">
+              Online consultations
+            </p>
+          </div>
         </section>
 
-        {/* Appointments */}
+        {/* Quick Actions */}
+        <section className="mt-8">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold">Quick actions</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Manage your schedule and doctor profile.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Link
+              href="/doctor/calendar"
+              className="group rounded-2xl border border-[var(--line)] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <div className="grid size-10 place-items-center rounded-xl bg-blue-50 text-[var(--brand)]">
+                  C
+                </div>
+
+                <span className="text-lg text-[var(--muted)] transition group-hover:translate-x-1 group-hover:text-[var(--brand)]">
+                  →
+                </span>
+              </div>
+
+              <h3 className="mt-4 font-semibold">
+                Manage Calendar
+              </h3>
+
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                View appointments and manage your schedule.
+              </p>
+            </Link>
+
+            <Link
+              href="/doctor/appointments"
+              className="group rounded-2xl border border-[var(--line)] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <div className="grid size-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700">
+                  A
+                </div>
+
+                <span className="text-lg text-[var(--muted)] transition group-hover:translate-x-1 group-hover:text-[var(--brand)]">
+                  →
+                </span>
+              </div>
+
+              <h3 className="mt-4 font-semibold">
+                All Appointments
+              </h3>
+
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Review and manage your complete appointment schedule.
+              </p>
+            </Link>
+
+            <Link
+              href="/doctor/profile"
+              className="group rounded-2xl border border-[var(--line)] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <div className="grid size-10 place-items-center rounded-xl bg-purple-50 text-purple-700">
+                  P
+                </div>
+
+                <span className="text-lg text-[var(--muted)] transition group-hover:translate-x-1 group-hover:text-[var(--brand)]">
+                  →
+                </span>
+              </div>
+
+              <h3 className="mt-4 font-semibold">
+                My Profile
+              </h3>
+
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Update your professional details and availability.
+              </p>
+            </Link>
+          </div>
+        </section>
+
+        {/* Upcoming appointments */}
         <section
-          className="mt-8 overflow-hidden rounded-xl border border-[var(--line)] bg-white"
+          className="mt-8 overflow-hidden rounded-2xl border border-[var(--line)] bg-white"
           aria-labelledby="appointments-title"
         >
-          <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
+          <div className="flex flex-col gap-3 border-b border-[var(--line)] px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 id="appointments-title" className="font-semibold">
+              <h2
+                id="appointments-title"
+                className="text-lg font-semibold"
+              >
                 Upcoming appointments
               </h2>
 
               <p className="mt-1 text-sm text-[var(--muted)]">
                 {appointments.length} appointment
-                {appointments.length !== 1 ? "s" : ""}
+                {appointments.length !== 1 ? "s" : ""} scheduled
               </p>
             </div>
 
@@ -326,28 +381,34 @@ export default function DoctorDashboardPage() {
               href="/doctor/appointments"
               className="text-sm font-medium text-[var(--brand)] hover:underline"
             >
-              View all
+              View all →
             </Link>
           </div>
 
           {/* Loading */}
           {loading && (
-            <div className="px-5 py-10 text-center text-sm text-[var(--muted)]">
+            <div className="px-5 py-12 text-center text-sm text-[var(--muted)]">
               Loading appointments...
             </div>
           )}
 
           {/* Error */}
           {!loading && error && (
-            <div className="px-5 py-10 text-center text-sm text-red-600">
+            <div className="px-5 py-12 text-center text-sm text-red-600">
               {error}
             </div>
           )}
 
-          {/* Empty state */}
+          {/* Empty */}
           {!loading && !error && appointments.length === 0 && (
-            <div className="px-5 py-12 text-center">
-              <p className="font-medium">No upcoming appointments</p>
+            <div className="px-5 py-14 text-center">
+              <div className="mx-auto grid size-12 place-items-center rounded-full bg-[var(--canvas)] text-[var(--brand)]">
+                A
+              </div>
+
+              <p className="mt-4 font-medium">
+                No upcoming appointments
+              </p>
 
               <p className="mt-1 text-sm text-[var(--muted)]">
                 Your upcoming appointments will appear here.
@@ -361,13 +422,12 @@ export default function DoctorDashboardPage() {
               {appointments.map((appointment) => (
                 <li
                   key={appointment.id}
-                  className="px-5 py-5 transition hover:bg-gray-50"
+                  className="px-5 py-5 transition hover:bg-gray-50/70 sm:px-6"
                 >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    {/* Appointment information */}
+                  <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                    {/* Patient */}
                     <div className="flex min-w-0 gap-4">
-                      {/* Patient avatar */}
-                      <div className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--canvas)] text-sm font-semibold text-[var(--brand)]">
+                      <div className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--canvas)] text-sm font-semibold text-[var(--brand)]">
                         {appointment.patientName
                           .split(" ")
                           .map((name) => name[0])
@@ -395,18 +455,17 @@ export default function DoctorDashboardPage() {
                           {appointment.reason}
                         </p>
 
-                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
                           <span>
-                            📅 {formatDate(appointment.date)}
+                            {formatDate(appointment.date)}
                           </span>
 
                           <span>
-                            🕐 {formatTime(appointment.startTime)} –{" "}
+                            {formatTime(appointment.startTime)} –{" "}
                             {formatTime(appointment.endTime)}
                           </span>
 
                           <span>
-                            {appointment.type === "video" ? "🎥" : "🏥"}{" "}
                             {formatAppointmentType(appointment.type)}
                           </span>
                         </div>
@@ -414,26 +473,26 @@ export default function DoctorDashboardPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-wrap gap-2 lg:justify-end">
+                    <div className="flex flex-wrap gap-2 xl:shrink-0">
                       <Link
                         href={`/doctor/appointments/${appointment.id}/patient`}
-                        className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                        className="rounded-lg border border-[var(--line)] bg-white px-3.5 py-2 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
                       >
-                        👤 Patient Details
+                        Patient details
                       </Link>
 
                       <Link
                         href={`/doctor/calendar?appointment=${appointment.id}`}
-                        className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                        className="rounded-lg border border-[var(--line)] bg-white px-3.5 py-2 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
                       >
-                        🗓 Calendar
+                        Calendar
                       </Link>
 
                       <Link
                         href={`/doctor/appointments/${appointment.id}`}
-                        className="rounded-lg bg-[var(--brand)] px-3 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                        className="rounded-lg bg-[var(--brand)] px-3.5 py-2 text-sm font-medium text-white transition hover:opacity-90"
                       >
-                        View Details
+                        View details
                       </Link>
                     </div>
                   </div>
@@ -442,8 +501,10 @@ export default function DoctorDashboardPage() {
             </ul>
           )}
         </section>
+
+        {/* Bottom spacing */}
+        <div className="h-8" />
       </div>
     </main>
   );
 }
-

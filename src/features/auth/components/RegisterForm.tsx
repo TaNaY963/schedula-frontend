@@ -83,16 +83,19 @@ export default function RegisterForm() {
 
     try {
       saveUser({
-        id: "pat-001",
+        id: `user-${Date.now()}`,
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
       });
 
-      router.push("/login");
-    } catch {
+      router.push("/login?role=user");
+    } catch (error) {
       setErrors({
-        form: "Registration failed. Please try again.",
+        form:
+          error instanceof Error
+            ? error.message
+            : "Registration failed. Please try again.",
       });
     } finally {
       setIsSubmitting(false);

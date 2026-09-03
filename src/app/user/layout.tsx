@@ -1,4 +1,5 @@
 import UserNav from "@/app/user/UserNav";
+import { PatientNotificationsProvider } from "@/features/notifications/PatientNotificationsProvider";
 
 export default function UserLayout({
   children,
@@ -6,22 +7,24 @@ export default function UserLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#f6f8f7]">
-      <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-white/95 backdrop-blur">
-        <div className="mx-auto max-w-6xl px-4 sm:px-8 lg:px-12">
-          <div className="flex min-h-16 items-center justify-between gap-6">
-            <div className="shrink-0">
-              <span className="text-xl font-bold tracking-tight text-[var(--brand)]">
-                Schedula
-              </span>
+    <PatientNotificationsProvider>
+      <div className="min-h-screen bg-[#f6f8f7]">
+        <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-white/95 backdrop-blur">
+          <div className="mx-auto max-w-6xl px-4 sm:px-8 lg:px-12">
+            <div className="flex min-h-16 items-center justify-between gap-6">
+              <div className="shrink-0">
+                <span className="text-xl font-bold tracking-tight text-[var(--brand)]">
+                  Schedula
+                </span>
+              </div>
+
+              <UserNav />
             </div>
-
-            <UserNav />
           </div>
-        </div>
-      </header>
+        </header>
 
-      {children}
-    </div>
+        {children}
+      </div>
+    </PatientNotificationsProvider>
   );
 }

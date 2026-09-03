@@ -27,6 +27,11 @@ export function getUsers(): StoredUser[] {
 
 export function saveUser(user: StoredUser): void {
   const users = getUsers();
+  const email = user.email.trim().toLowerCase();
+
+  if (users.some((existing) => existing.email.toLowerCase() === email)) {
+    throw new Error("An account with this email already exists.");
+  }
 
   localStorage.setItem(
     STORAGE_KEY,
