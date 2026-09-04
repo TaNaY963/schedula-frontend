@@ -1,251 +1,741 @@
-# Schedula Ã¢â‚¬â€ Frontend Internship Starter
+# Schedula — Doctor Appointment & Clinic Management Platform
 
-Schedula is a practical Next.js starter for doctor appointment booking and clinic operations. It gives interns a small, typed codebase with a real UI, predictable data boundaries, and a contribution workflow that scales beyond a demo.
+Schedula is a healthcare appointment management platform built to simplify the process of discovering doctors, booking appointments, managing availability, handling appointments, and accessing prescriptions.
 
-## Stack
+The application provides dedicated **User and Doctor portals** with role-specific workflows, appointment scheduling, calendar management, prescription management, notifications, and an interactive assistant to make common actions easier to access.
 
-- Next.js App Router, React, TypeScript, Tailwind CSS
-- ESLint for static analysis
-- A typed mock JSON endpoint at `GET /api/appointments`
-- Node.js 20.9 or later
+---
 
-## Quick start
+## 🌐 Live Demo
 
-```bash
-git clone https://github.com/PearlThoughts/frontend-internship.git
-cd frontend-internship
-npm install
-npm run dev
+**Live Application:** [YOUR_DEPLOYED_URL]
+
+## 🎥 Project Walkthrough
+
+**Loom Demo:** [WATCH THE PROJECT WALKTHROUGH](https://www.loom.com/share/d9e82225587242828b09783efdd42114)
+
+The walkthrough demonstrates the major User and Doctor workflows, including doctor discovery, appointment booking, availability management, calendar management, prescriptions, notifications, and the Schedula Assistant.
+
+---
+
+## ✨ Features
+
+### 👤 User Portal
+
+* User login and authentication
+* User dashboard
+* Doctor listing
+* Doctor search and discovery
+* Doctor details
+* View available appointment slots
+* Select appointment date and time
+* Book appointments
+* Appointment confirmation
+* My Appointments
+* Appointment status tracking
+* View completed appointments
+* View cancelled and missed appointments
+* View prescriptions
+* Download prescription PDFs
+* Review doctors
+* Rebook appointments
+* User profile management
+* Appointment-related notifications
+* Interactive Schedula Assistant
+
+### 👨‍⚕️ Doctor Portal
+
+* Doctor registration
+* Doctor login
+* Registration and login validation
+* Error handling
+* Doctor dashboard
+* Upcoming appointment overview
+* Doctor profile
+* Update doctor information
+* Appointment availability management
+* Create available date/time slots
+* Recurring availability
+* View existing availability
+* Manage availability slots
+* All Appointments page
+* Appointment search and filtering
+* Appointment details
+* Prescription management
+* Calendar-based appointment management
+
+---
+
+# 📅 Appointment Management
+
+Schedula provides a complete appointment lifecycle for both doctors and users.
+
+### Appointment statuses
+
+* Pending
+* Confirmed
+* Upcoming
+* Completed
+* Cancelled
+* Missed
+
+### Doctor actions
+
+For pending appointments:
+
+* Confirm
+* Decline
+
+For confirmed/upcoming appointments:
+
+* Reschedule
+* Cancel
+
+After the appointment time:
+
+* Mark as Completed
+* Mark as Missed
+
+Completed, cancelled, and missed appointments are treated as read-only where appropriate.
+
+---
+
+# 🗓️ Doctor Calendar
+
+The Doctor Portal includes a calendar for managing appointments and availability.
+
+### Calendar views
+
+* Day
+* Week
+* Month
+
+### Calendar capabilities
+
+* Display upcoming appointments
+* Display doctor availability
+* Drag and drop appointment rescheduling
+* Prevent scheduling into unavailable slots
+* Prevent double booking
+* Update appointment date/time after rescheduling
+* Reflect appointment changes in the appointment list
+* Keep completed, cancelled, and missed appointments read-only
+
+---
+
+# ⏰ Doctor Availability
+
+Doctors can manage their appointment availability directly from their profile.
+
+### Supported functionality
+
+* Create date-specific availability
+* Add start and end times
+* Create multiple available slots
+* Create recurring availability
+* Daily recurring availability
+* Weekly recurring availability
+* View existing slots
+* Manage/remove available slots
+* Prevent users from selecting unavailable slots
+
+### Availability flow
+
+```text
+Doctor
+   ↓
+Profile
+   ↓
+Appointment Availability
+   ↓
+Create Slot
+   ↓
+Available on User Portal
+   ↓
+User Selects Doctor
+   ↓
+User Selects Date & Time
+   ↓
+Appointment Booked
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Only available and unbooked slots can be selected by users.
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the local development server |
-| `npm run lint` | Run static analysis |
-| `npm run build` | Type-check and create a production build |
-| `npm run start` | Serve the production build |
+---
 
-## Architecture
+# 📋 All Appointments
 
-Keep every change inside the layer that owns it. Route files compose features; they should not contain feature state, API parsing, or large presentational trees.
+Doctors have a dedicated appointments page for managing their complete appointment history.
+
+Appointments can be viewed by:
+
+```text
+All
+Pending
+Confirmed
+Upcoming
+Completed
+Cancelled
+Missed
+```
+
+The appointment page also supports:
+
+* Search
+* Status filtering
+* Date filtering
+* Appointment details
+* Appointment actions based on current status
+
+---
+
+# 💊 Prescription Management
+
+Doctors can create and manage prescriptions associated with completed appointments.
+
+### Prescription information
+
+* Diagnosis
+* Medicines
+* Dosage
+* Duration
+* Instructions
+
+Doctors can:
+
+* Create prescriptions
+* View prescriptions
+* Edit prescriptions
+* Update prescription information
+
+Changes to a prescription are reflected in the corresponding completed appointment for the user.
+
+### User prescription flow
+
+```text
+Doctor Completes Appointment
+          ↓
+Doctor Creates Prescription
+          ↓
+Prescription Linked to Appointment
+          ↓
+User Opens Completed Appointment
+          ↓
+View Prescription
+          ↓
+Download Prescription PDF
+```
+
+Users can also access prescriptions from their dedicated prescription history/menu.
+
+---
+
+# 👤 User Profile
+
+The User Portal provides a centralized profile for managing personal and healthcare-related information.
+
+### Profile information
+
+* Personal information
+* Physical details
+* Medical conditions
+* Allergies
+* Current medications
+* Insurance details
+* Emergency contact
+
+### Profile summary
+
+The profile also provides summary information such as:
+
+* Total Prescriptions
+* Completed Appointments
+* Test Reports
+
+---
+
+# 🔔 Notifications
+
+Schedula includes appointment-related notifications to keep users informed about important changes.
+
+Notifications cover:
+
+* New appointment booking
+* Appointment confirmation
+* Appointment rescheduling
+* Appointment cancellation
+* Appointment reminders
+* Missed appointments
+* Completed appointments
+* Prescription availability
+
+---
+
+# 🤖 Schedula Assistant
+
+Schedula includes an interactive assistant designed to improve navigation and make frequently used actions easier to access.
+
+### User Assistant
+
+Users can quickly access actions such as:
+
+```text
+How can I help you?
+
+[Find a Doctor]
+[Book Appointment]
+[My Appointments]
+[Prescriptions]
+```
+
+### Doctor Assistant
+
+Doctors can quickly access:
+
+```text
+How can I help you?
+
+[Today's Appointments]
+[Calendar]
+[Manage Availability]
+[Appointments]
+[Prescriptions]
+[Profile]
+```
+
+The assistant is designed as a **navigation and usability feature** and is not intended to provide medical diagnosis or medical advice.
+
+---
+
+# 🔄 Complete Application Flow
+
+## User Flow
+
+```text
+User Login
+     ↓
+Doctor Listing
+     ↓
+Doctor Details
+     ↓
+Available Slots
+     ↓
+Select Date & Time
+     ↓
+Book Appointment
+     ↓
+Booking Confirmation
+     ↓
+Doctor Confirms
+     ↓
+Appointment
+     ↓
+Completed / Missed
+     ↓
+Prescription / Review / Rebook
+```
+
+## Doctor Flow
+
+```text
+Doctor Registration
+     ↓
+Doctor Login
+     ↓
+Dashboard
+     ↓
+Profile
+     ↓
+Create Availability
+     ↓
+Manage Slots
+     ↓
+Appointments
+     ↓
+Confirm / Decline
+     ↓
+Reschedule / Cancel
+     ↓
+Complete / Miss Appointment
+     ↓
+Create / Manage Prescription
+```
+
+## Complete Healthcare Flow
+
+```text
+Doctor Availability
+        ↓
+User Books Appointment
+        ↓
+Doctor Confirms
+        ↓
+Appointment
+        ↓
+Completed / Missed
+        ↓
+Prescription
+        ↓
+Review / Rebook
+```
+
+---
+
+# 🛠️ Tech Stack
+
+## Frontend
+
+* **Next.js** — App Router
+* **React**
+* **TypeScript**
+* **Tailwind CSS**
+* **FullCalendar**
+
+## Backend / API
+
+* Next.js Route Handlers
+* REST-style API endpoints
+* Typed API contracts
+* Mock data/API implementation
+
+## Development Tools
+
+* ESLint
+* Git
+* GitHub
+* VS Code
+* npm
+
+---
+
+# 🏗️ Architecture
+
+The application follows a feature-oriented frontend architecture with reusable components and typed data boundaries.
 
 ```text
 src/
-  app/                         # Routes, layouts, metadata, route handlers
-    api/                       # HTTP boundary only
-  features/
-    appointments/
-      components/              # Feature UI (cards, forms, views)
-      hooks/                   # Feature state and query hooks
-      api/                     # Typed feature API client / mappers
-      types.ts                 # Feature-only types
-  components/
-    ui/                        # Reusable headless primitives
-    layout/                    # Shared app shell/navigation
-  lib/
-    mock-data/                 # API fixtures used only by mock handlers
-    utils/                     # Small, generic pure helpers
-  types/                       # Cross-feature domain contracts
+│
+├── app/
+│   ├── api/
+│   │   ├── appointments/
+│   │   ├── availability/
+│   │   └── ...
+│   │
+│   ├── doctor/
+│   │   ├── login/
+│   │   ├── register/
+│   │   ├── dashboard/
+│   │   ├── profile/
+│   │   ├── appointments/
+│   │   ├── calendar/
+│   │   └── ...
+│   │
+│   ├── user/
+│   │   ├── dashboard/
+│   │   ├── appointments/
+│   │   ├── prescriptions/
+│   │   ├── profile/
+│   │   └── ...
+│   │
+│   ├── booking/
+│   └── ...
+│
+├── components/
+│   ├── ui/
+│   ├── layout/
+│   └── ...
+│
+├── features/
+│   ├── appointments/
+│   ├── doctors/
+│   ├── prescriptions/
+│   ├── notifications/
+│   └── ...
+│
+├── lib/
+│   ├── mock-data/
+│   └── utils/
+│
+└── types/
+    ├── appointment.ts
+    ├── doctor.ts
+    └── ...
 ```
 
-### Dependency rules
+---
 
-- `app` may import from `features`, `components`, `lib`, and `types`.
-- A `feature` may import shared `components`, `lib`, and `types`, but never another featureÃ¢â‚¬â„¢s private files.
-- `components/ui` must not fetch data or know appointment business rules.
-- `lib/mock-data` is never imported directly by a page or visual component; route handlers expose it through HTTP.
-- Promote a helper to `lib` only after it is genuinely shared by two or more features.
+# 🔌 API Architecture
 
-## Headless component structure
+The application uses Next.js Route Handlers as the API boundary.
 
-Create reusable UI primitives around behaviour and accessibility, then let the feature own its content and visual composition.
-
-```tsx
-// components/ui/dialog/dialog.tsx Ã¢â‚¬â€ reusable behaviour and semantics
-<Dialog open={isOpen} onOpenChange={setIsOpen}>
-  <Dialog.Trigger>Reschedule</Dialog.Trigger>
-  <Dialog.Content aria-describedby="reschedule-help">
-    <RescheduleAppointmentForm appointment={appointment} />
-  </Dialog.Content>
-</Dialog>
-```
-
-A headless `Dialog`, `Select`, `Tabs`, or `Popover` owns keyboard interactions, focus management, ARIA semantics, and state transitions. It does **not** own appointment copy, API calls, or page-specific layout. Prefer composition over boolean-heavy APIs such as `isBookingDialog`, `patientMode`, or `compactHeader`.
-
-## Mock JSON API
-
-The dashboard calls the API exactly as it would call a backend:
+The general data flow is:
 
 ```text
-Browser component Ã¢â€ â€™ GET /api/appointments Ã¢â€ â€™ route handler Ã¢â€ â€™ mock fixture
+Browser
+   ↓
+Feature / API Client
+   ↓
+Next.js Route Handler
+   ↓
+Mock Data
+   ↓
+Response
+   ↓
+UI
 ```
 
-- Contract type: `src/types/appointment.ts`
-- Mock records: `src/lib/mock-data/appointments.ts`
-- JSON endpoint: `src/app/api/appointments/route.ts`
+Appointment and availability data are handled through typed API contracts rather than being directly coupled to individual UI components.
 
-When the backend is ready, retain the `Appointment` contract and replace the route handler or the feature API client. Do not scatter `fetch()` calls throughout cards, rows, and buttons. Keep response parsing, errors, and mapping in one API boundary.
+This architecture keeps the frontend ready for future integration with a production backend and database.
 
-Example typed client pattern:
+---
 
-```ts
-export async function getAppointments(): Promise<Appointment[]> {
-  const response = await fetch("/api/appointments");
-  if (!response.ok) throw new Error("Unable to load appointments");
-  const body: { data: Appointment[] } = await response.json();
-  return body.data;
-}
+# 📦 Getting Started
+
+## Prerequisites
+
+Make sure you have installed:
+
+* Node.js 20.9 or later
+* npm
+* Git
+
+## Clone the repository
+
+```bash
+git clone <YOUR_REPOSITORY_URL>
+cd schedula-frontend
 ```
 
-## Code-quality guardrails
+## Install dependencies
 
-### DRY, without premature abstraction
-
-- Remove repeated business logic and duplicated API contracts.
-- Do not create a generic component for a one-off screen. Repeatable behaviour is the signal to extract.
-- Prefer configuration data and small pure helpers over copy-pasted conditionals.
-
-### SOLID, applied to frontend work
-
-| Principle | Schedula practice |
-| --- | --- |
-| Single responsibility | A `AppointmentCard` renders one appointment; a hook loads data; a route handler returns HTTP data. |
-| Open/closed | Add a new status through a status map or variant, not by rewriting every card. |
-| Liskov substitution | Components accept their declared contracts and work with every valid `Appointment`. |
-| Interface segregation | Pass `onCancel` to the action that needs itÃ¢â‚¬â€not a large page controller object. |
-| Dependency inversion | UI depends on typed API functions/contracts, not directly on mock fixture files. |
-
-Also keep components focused, use semantic HTML first, support keyboard use, provide loading/error/empty states, and test mobile layouts at 320px, 768px, 1024px, and 1440px.
-
-## Intern workflow: local and personal repositories
-
-`git pull` updates a repository that already exists on a machine. It cannot create the first local copy. The starter repository is distribution-only: interns are **not** collaborators on `PearlThoughts/frontend-internship`, and they must not create branches or PRs in it.
-
-Each intern works in a personal repository or a company-provided local copy, then shares their own repository/PR with their mentor. This keeps the organisation starter clean while allowing many interns to work independently.
-
-### Setup options
-
-Use the option your mentor provides:
-
-1. **Personal repository from the starter:** create a repository under the internâ€™s own GitHub account, copy the starter into it, then clone that personal repository locally.
-2. **Starter ZIP:** download and extract the starter, run `git init`, create a personal remote repository, and push the initial copy there.
-3. **Existing local project:** after the first setup only, use `git pull` to receive updates from the internâ€™s own remote or an approved upstream remote.
-
-> A private organisation repository cannot be cloned, forked, or pulled by non-collaborators. If the starter must be directly accessible to all interns, the organisation must separately decide to make it public or distribute it as a ZIP/template.
-
-### Personal repository and branch workflow
-
-```mermaid
-flowchart TD
-  A[Receive starter: personal repo or ZIP] --> B[Set up local machine]
-  B --> C[Create intern/name integration branch in personal repo]
-  C --> D[Create one task branch]
-  D --> E[Make one focused change]
-  E --> F[Commit small conventional commits]
-  F --> G[Run lint and build]
-  G --> H[Push to personal repository]
-  H --> I[Open detailed PR in personal repository]
-  I --> J[Mentor reviews repository/PR]
-  J --> K[Merge task branch into intern/name]
-  K --> L[Pull latest personal integration branch before next task]
+```bash
+npm install
 ```
+
+## Start the development server
+
+```bash
+npm run dev
+```
+
+Open the application at:
+
+```text
+http://localhost:3000
+```
+
+---
+
+# 📜 Available Scripts
+
+| Command         | Description                  |
+| --------------- | ---------------------------- |
+| `npm run dev`   | Start the development server |
+| `npm run lint`  | Run ESLint                   |
+| `npm run build` | Create a production build    |
+| `npm run start` | Start the production build   |
+
+Before deployment, run:
+
+```bash
+npm run lint
+npm run build
+```
+
+---
+
+# 🎨 UX & UI
+
+Schedula focuses on a clean, responsive and healthcare-friendly experience.
+
+### UI principles
+
+* Responsive design
+* Reusable components
+* Consistent navigation
+* Clear appointment statuses
+* Simple booking experience
+* Accessible interactions
+* Form validation
+* Loading states
+* Error states
+* Empty states
+* Mobile-friendly layouts
+* Responsive calendar
+* Clear user feedback after important actions
+
+The interface is designed to make complex appointment workflows easy to understand for both doctors and patients.
+
+---
+
+# 🔐 Validation & Error Handling
+
+Forms throughout the application include validation for required and invalid inputs.
+
+The application handles common states including:
+
+* Loading
+* Empty data
+* API errors
+* Invalid form input
+* Invalid appointment actions
+* Unavailable slots
+* Already-booked slots
+* Missing prescriptions
+* Empty appointment history
+
+---
+
+# 🚀 Deployment
+
+The application is built with Next.js and can be deployed to a Next.js-compatible hosting platform such as Vercel.
+
+### Production build
+
+```bash
+npm run build
+```
+
+### Run production build locally
+
+```bash
+npm run start
+```
+
+### Live Application
+
+**[Open Schedula](YOUR_DEPLOYED_URL)**
+
+---
+
+# 🎥 Project Demo
+
+**[▶ Watch the Complete Schedula Walkthrough on Loom](YOUR_LOOM_URL)**
+
+The Loom walkthrough demonstrates:
+
+* User authentication
+* Doctor registration and login
+* Doctor listing
+* Doctor availability
+* Recurring slots
+* Appointment booking
+* Doctor dashboard
+* Appointment management
+* Calendar
+* Appointment rescheduling
+* Prescription management
+* User prescriptions
+* Prescription PDF download
+* User profile
+* Notifications
+* Schedula Assistant
+
+---
+
+# 🌱 Future Improvements
+
+The current implementation uses a mock API/data layer. Possible future improvements include:
+
+* Production backend integration
+* Database integration
+* JWT/session-based authentication
+* Role-based access control
+* Real-time notifications
+* Email/SMS appointment reminders
+* Online consultation/video appointments
+* Payment integration
+* Medical report management
+* Advanced doctor search
+* Admin dashboard
+* Real-time calendar synchronization
+* Production-grade security and data protection
+
+---
+
+# 🌿 Git Workflow
+
+The project uses focused branches and meaningful commits.
 
 ### Branch naming
 
-| Branch | Format | Example |
-| --- | --- | --- |
-| Personal integration branch | `intern/<first-name>` | `intern/priya` |
-| Feature task | `feat/<ticket>-<scope>-<slug>` | `feat/SCH-142-appointments-doctor-filter` |
-| Bug fix | `fix/<ticket>-<scope>-<slug>` | `fix/SCH-157-booking-timezone` |
-| Documentation | `docs/<ticket>-<slug>` | `docs/SCH-160-api-contract` |
-| Chore/tooling | `chore/<ticket>-<slug>` | `chore/SCH-161-eslint-rules` |
-
-Use lowercase kebab-case. Include the task/ticket ID when one exists. A task branch must describe one reviewable outcome; do not mix a styling cleanup, a feature, and a dependency upgrade.
-
-### Commands after first local setup
-
-Create the personal integration branch once in the internâ€™s **own** repository:
-
-```bash
-git switch -c intern/your-name
-git push -u origin intern/your-name
+```text
+feat/<scope>
+fix/<scope>
+docs/<scope>
+chore/<scope>
 ```
 
-Start every assigned task from the latest personal integration branch:
-
-```bash
-git switch intern/your-name
-git pull --ff-only origin intern/your-name
-git switch -c feat/SCH-142-appointments-doctor-filter
-```
-
-Commit focused increments as soon as each small logical unit is complete:
-
-```bash
-git add src/features/appointments
-git commit -m "feat(appointments): add doctor filter"
-git push -u origin feat/SCH-142-appointments-doctor-filter
-```
-
-### Keeping a local project current
-
-After the initial setup, use this to update a checked-out branch from the internâ€™s own remote:
-
-```bash
-git switch intern/your-name
-git pull --ff-only origin intern/your-name
-```
-
-If a mentor gives the intern an approved upstream remote, add it once and fetch updates without pushing to it:
-
-```bash
-git remote add upstream <approved-starter-url>
-git fetch upstream
-git merge upstream/<approved-branch>
-```
-
-Never push to the upstream starter repository unless the mentor has explicitly granted access.
-
-### Commit standard
-
-Make small, meaningful commits. A commit should be safe to review, revert, and describe in one sentence.
+Examples:
 
 ```text
-feat(appointments): add doctor filter
-fix(booking): preserve selected time on validation error
-docs(readme): document task branch workflow
-chore(tooling): align lint script
+feat/prescription-menu
+feat/doctor-calendar
+fix/booking-slot-selection
+docs/readme
 ```
 
-Do not create commits such as `update`, `changes`, `wip`, or a large â€œall workâ€ commit. Avoid committing generated output, `.env` files, secrets, or unrelated formatting changes.
+### Commit examples
 
-### Pull request checklist
+```bash
+git commit -m "feat(appointments): add doctor appointment management"
 
-Each task PR lives in the internâ€™s **personal** repository and targets `intern/your-name`. Include:
+git commit -m "feat(prescriptions): add user prescription menu"
 
-1. A concise problem and solution summary.
-2. Screenshots or a short recording for visual changes.
-3. API contract or mock-data changes, if any.
-4. Verification results: `npm run lint` and `npm run build`.
-5. Known limitations or follow-up work.
-6. A link to the assigned ticket/task.
+git commit -m "feat(assistant): add quick action navigation"
 
-Only merge a task PR after review. Interns share the PR URL or their repository URL with the mentor; they do not open PRs against `PearlThoughts/frontend-internship` unless they are granted collaborator access.
+git commit -m "fix(booking): prevent unavailable slot selection"
 
-## Before requesting review
+git commit -m "docs(readme): update project documentation"
+```
 
-- [ ] Branch name follows the documented convention.
-- [ ] Change is scoped to one task and no unrelated files are included.
-- [ ] UI has keyboard access and meaningful loading, error, and empty states.
-- [ ] Mock/API contract remains typed and is not imported into visual components.
-- [ ] `npm run lint` and `npm run build` pass.
-- [ ] PR description, screenshots, and verification notes are complete.
+Commits should be:
 
-## UI delivery checks
+* Small
+* Focused
+* Descriptive
+* Easy to review
+* Easy to revert
 
-- Prefer small, focused components and typed boundaries.
-- Use real loading, empty, and error states for data-driven UI.
-- Design mobile-first; verify 320px, 768px, 1024px, and 1440px.
-- Keep motion purposeful, fast, and respectful of reduced-motion preferences.
+Avoid generic commit messages such as:
+
+```text
+update
+changes
+final
+wip
+all work
+```
+
+---
+
+# 👨‍💻 Author
+
+## Tanay Pant
+
+B.Tech — Computer Science & Engineering
+
+**Full Stack Developer**
+
+### Skills
+
+* Java
+* Spring Boot
+* JavaScript
+* TypeScript
+* React.js
+* Next.js
+* Node.js
+* Express.js
+* REST APIs
+* MySQL
+* MongoDB
+* Tailwind CSS
+* Git & GitHub
+
+---
+
+## 📄 License
+
+This project was developed as part of a frontend internship project and is intended for educational, demonstration, and portfolio purposes.
