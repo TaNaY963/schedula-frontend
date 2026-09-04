@@ -8,7 +8,7 @@ The application provides dedicated **User and Doctor portals** with role-specifi
 
 ## 🌐 Live Demo
 
-**Live Application:** [YOUR_DEPLOYED_URL]
+**Live Application:** [https://schedula-frontend-gpgyi8tdi-tanay20.vercel.app/]
 
 ## 🎥 Project Walkthrough
 
