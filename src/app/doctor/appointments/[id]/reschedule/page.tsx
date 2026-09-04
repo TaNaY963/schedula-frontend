@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import PageHeader from "@/components/portal/PageHeader";
 import PortalMain from "@/components/portal/PortalMain";
+import FlashBanner from "@/components/portal/FlashBanner";
 import TimeSlotSelect from "@/components/forms/TimeSlotSelect";
 import type { TimeSlotInterval } from "@/lib/time-slot-options";
 import type { Appointment } from "@/types/appointment";
@@ -88,6 +89,20 @@ export default function RescheduleAppointmentPage({
       cancelled = true;
     };
   }, [params]);
+
+  useEffect(() => {
+    if (!message) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setMessage("");
+    }, 5000);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [message]);
 
   function hasConflict(
     appointments: Appointment[],
@@ -335,21 +350,21 @@ export default function RescheduleAppointmentPage({
 
           {/* Error */}
           {error && (
-            <div
-              className="mt-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-              role="alert"
-            >
-              {error}
-            </div>
+            <FlashBanner
+              message={error}
+              variant="error"
+              onDismiss={() => setError("")}
+            />
           )}
 
-          {/* Success */}
           {message && (
-            <div
-              className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"
-              role="status"
-            >
-              {message}
+            <div className="mt-5">
+              <FlashBanner
+                message={message}
+                variant="success"
+                onDismiss={() => setMessage("")}
+                autoHideMs={0}
+              />
             </div>
           )}
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import PageHeader from "@/components/portal/PageHeader";
 import PortalMain from "@/components/portal/PortalMain";
+import FlashBanner from "@/components/portal/FlashBanner";
 import {
   prescriptionHighlightClass,
   usePrescriptionDeepLink,
@@ -19,6 +20,7 @@ export default function DoctorPrescriptionsPage() {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
     const [editingPrescription, setEditingPrescription] = useState<Prescription | null>(null);
 
     const [formData, setFormData] = useState({
@@ -73,6 +75,46 @@ export default function DoctorPrescriptionsPage() {
             ),
         );
     };
+
+    const resetPrescriptionForm = useCallback((closeForm = true) => {
+        setFormError("");
+        setSuccessMessage("");
+        setEditingPrescription(null);
+
+        setFormData({
+            patientId: "",
+            patientName: "",
+            appointmentId: "",
+            diagnosis: "",
+            generalInstructions: "",
+        });
+
+        setMedicines([
+            {
+                id: `med-${Date.now()}`,
+                name: "",
+                dosage: "",
+                frequency: "",
+                duration: "",
+                instructions: "",
+            },
+        ]);
+
+        if (closeForm) {
+            setShowCreateForm(false);
+        }
+    }, []);
+
+    const loadPrescriptions = useCallback(async () => {
+        const response = await fetch("/api/prescriptions");
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch prescriptions");
+        }
+
+        const result = await response.json();
+        setPrescriptions(result.data);
+    }, []);
 
     const handleSavePrescription = async () => {
         setFormError("");
@@ -140,37 +182,15 @@ export default function DoctorPrescriptionsPage() {
                 );
             }
 
-            setPrescriptions((current) =>
-                editingPrescription
-                    ? current.map((prescription) =>
-                        prescription.id === editingPrescription.id
-                            ? result.data
-                            : prescription,
-                    )
-                    : [...current, result.data],
+            await loadPrescriptions();
+
+            const wasEditing = Boolean(editingPrescription);
+            resetPrescriptionForm();
+            setSuccessMessage(
+                wasEditing
+                    ? "Prescription updated successfully."
+                    : "Prescription created successfully.",
             );
-
-            setShowCreateForm(false);
-            setEditingPrescription(null);
-
-            setFormData({
-                patientId: "",
-                patientName: "",
-                appointmentId: "",
-                diagnosis: "",
-                generalInstructions: "",
-            });
-
-            setMedicines([
-                {
-                    id: `med-${Date.now()}`,
-                    name: "",
-                    dosage: "",
-                    frequency: "",
-                    duration: "",
-                    instructions: "",
-                },
-            ]);
         } catch (error) {
             setFormError(
                 error instanceof Error
@@ -183,6 +203,8 @@ export default function DoctorPrescriptionsPage() {
     };
 
     const handleEditPrescription = (prescription: Prescription) => {
+        setFormError("");
+        setSuccessMessage("");
         setEditingPrescription(prescription);
 
         setFormData({
@@ -200,14 +222,7 @@ export default function DoctorPrescriptionsPage() {
     useEffect(() => {
         const fetchPrescriptions = async () => {
             try {
-                const response = await fetch("/api/prescriptions");
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch prescriptions");
-                }
-
-                const result = await response.json();
-                setPrescriptions(result.data);
+                await loadPrescriptions();
             } catch {
                 setError("Unable to load prescriptions.");
             } finally {
@@ -216,7 +231,7 @@ export default function DoctorPrescriptionsPage() {
         };
 
         fetchPrescriptions();
-    }, []);
+    }, [loadPrescriptions]);
 
     const highlightedId = usePrescriptionDeepLink(prescriptions, loading, {
         onMatch: (prescription) => {
@@ -261,7 +276,10 @@ export default function DoctorPrescriptionsPage() {
                     !showCreateForm ? (
                         <button
                             type="button"
-                            onClick={() => setShowCreateForm(true)}
+                            onClick={() => {
+                                resetPrescriptionForm(false);
+                                setShowCreateForm(true);
+                            }}
                             className="inline-flex w-fit items-center rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
                         >
                             + Create Prescription
@@ -269,6 +287,16 @@ export default function DoctorPrescriptionsPage() {
                     ) : undefined
                 }
             />
+
+            {successMessage && (
+                <div className="mb-6">
+                    <FlashBanner
+                        message={successMessage}
+                        variant="success"
+                        onDismiss={() => setSuccessMessage("")}
+                    />
+                </div>
+            )}
 
             {showCreateForm && (
                         <div
@@ -290,15 +318,18 @@ export default function DoctorPrescriptionsPage() {
 
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setShowCreateForm(false);
-                                        setEditingPrescription(null);
-                                    }}
+                                    onClick={() => resetPrescriptionForm()}
                                     className="text-sm font-medium text-gray-500 hover:text-gray-700"
                                 >
                                     Cancel
                                 </button>
                             </div>
+
+                            {formError && (
+                                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                                    {formError}
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
@@ -546,16 +577,10 @@ export default function DoctorPrescriptionsPage() {
                                 </div>
                             </div>
 
-                            {formError && (
-                                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                                    {formError}
-                                </div>
-                            )}
-
                             <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 pt-5">
                                 <button
                                     type="button"
-                                    onClick={() => setShowCreateForm(false)}
+                                    onClick={() => resetPrescriptionForm()}
                                     className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                                 >
                                     Cancel

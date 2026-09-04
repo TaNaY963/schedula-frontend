@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import RegisterForm from "@/features/auth/components/RegisterForm";
 import RoleToggle from "@/features/auth/components/RoleToggle";
+import { AUTH_REDIRECT_PARAM } from "@/features/auth/redirect";
 import { parseAuthRole, roleQuery } from "@/features/auth/role";
 import DoctorRegistrationForm from "@/features/doctor-portal/components/DoctorRegistrationForm";
 import type { UserRole } from "@/context/AuthContext";
@@ -31,10 +32,11 @@ function RegisterPageContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const role = parseAuthRole(searchParams.get("role"));
+  const redirectTo = searchParams.get(AUTH_REDIRECT_PARAM);
   const isDoctor = role === "doctor";
 
   function handleRoleChange(nextRole: UserRole) {
-    router.replace(`${pathname}${roleQuery(nextRole)}`);
+    router.replace(`${pathname}${roleQuery(nextRole, redirectTo)}`);
   }
 
   return (
@@ -69,13 +71,17 @@ function RegisterPageContent() {
           </div>
 
           <div className="mt-8">
-            {isDoctor ? <DoctorRegistrationForm /> : <RegisterForm />}
+            {isDoctor ? (
+              <DoctorRegistrationForm />
+            ) : (
+              <RegisterForm redirectTo={redirectTo} />
+            )}
           </div>
 
           <p className="mt-6 text-center text-sm text-[var(--muted)]">
             Already have an account?{" "}
             <Link
-              href={`/login${roleQuery(role)}`}
+              href={`/login${roleQuery(role, redirectTo)}`}
               className="font-semibold text-[var(--brand)] hover:text-[var(--brand-deep)]"
             >
               Login

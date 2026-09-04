@@ -1,29 +1,30 @@
 "use client";
 import { getAvailability } from "@/features/booking/api/availability";
+import {
+  getBookableDates,
+  getBookableStartTimes,
+  getPatientDoctorVisitHistory,
+} from "@/features/booking/api/bookable-slots";
+import AvailabilityDatePicker from "@/features/booking/components/AvailabilityDatePicker";
 import { parseAppointmentType } from "@/features/booking/rebook";
-import type { AvailabilitySlot } from "@/features/doctor-portal/availability/types";
 import { useAuth } from "@/context/AuthContext";
+import { getPatientLoginHref } from "@/features/auth/redirect";
 import PortalMain from "@/components/portal/PortalMain";
+import {
+  addMinutesToTime,
+  getCheckupDurationMinutes,
+  getCheckupTypeLabel,
+} from "@/lib/availability/bookable-slots";
+import { formatTimeLabel } from "@/lib/time-slot-options";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { TimeSlot, BookingStatus } from "@/features/booking/types";
+import type { BookingStatus } from "@/features/booking/types";
 import { getDoctors } from "@/features/doctors/api/doctors";
-import type { AppointmentType } from "@/types/appointment";
+import type { AppointmentType, CheckupType } from "@/types/appointment";
 import type { Doctor } from "@/types/doctor";
 
 type Status = "loading" | "ready" | "error";
-
-function formatSlotTime(time: string) {
-  const [hours, minutes] = time.split(":").map(Number);
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-
-  return date.toLocaleTimeString("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 export default function BookingPage() {
   return (
@@ -47,16 +48,23 @@ export default function BookingPage() {
 }
 
 function BookingPageContent() {
-  const { user } = useAuth();
+  const { user, isReady: authReady } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedSlot, setSelectedSlot] = useState("");
-  const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
+  const [selectedStartTime, setSelectedStartTime] = useState("");
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [bookableStartTimes, setBookableStartTimes] = useState<string[]>([]);
+  const [hasVisitedDoctor, setHasVisitedDoctor] = useState<boolean | null>(
+    null,
+  );
+  const [checkupType, setCheckupType] = useState<CheckupType>("normal");
   const [status, setStatus] = useState<Status>("loading");
+  const [scheduleStatus, setScheduleStatus] = useState<
+    "idle" | "loading" | "error"
+  >("idle");
   const [bookingStatus, setBookingStatus] =
     useState<BookingStatus>("idle");
   const isRebook = searchParams.get("rebook") === "1";
@@ -67,17 +75,47 @@ function BookingPageContent() {
   const appointmentReason =
     searchParams.get("reason")?.trim() || "General consultation";
 
+  const durationMinutes = useMemo(
+    () => getCheckupDurationMinutes(checkupType),
+    [checkupType],
+  );
+
+  const selectedEndTime = selectedStartTime
+    ? addMinutesToTime(selectedStartTime, durationMinutes)
+    : "";
+
+  const bookingPath = useMemo(
+    () =>
+      `/booking${
+        searchParams.toString() ? `?${searchParams.toString()}` : ""
+      }`,
+    [searchParams],
+  );
+
   useEffect(() => {
+    if (!authReady) {
+      return;
+    }
+
+    if (!user) {
+      router.replace(getPatientLoginHref(bookingPath));
+    }
+  }, [authReady, user, router, bookingPath]);
+
+  useEffect(() => {
+    if (!authReady || !user) {
+      return;
+    }
+
     Promise.all([getDoctors(), getAvailability()])
-      .then(([doctorData, availabilityData]) => {
+      .then(([doctorData]) => {
         setDoctors(doctorData);
-        setAvailability(availabilityData);
         setStatus("ready");
       })
       .catch(() => {
         setStatus("error");
       });
-  }, []);
+  }, [authReady, user]);
 
   useEffect(() => {
     if (status !== "ready" || !preselectedDoctorId) {
@@ -93,28 +131,103 @@ function BookingPageContent() {
     }
   }, [status, doctors, preselectedDoctorId]);
 
-  const selectedDoctorData = doctors.find(
-    (doctor) => doctor.id === selectedDoctor,
-  );
-  const doctorSlots = availability.filter(
-    (slot) =>
-      slot.doctorId === selectedDoctor &&
-      (!selectedDate || slot.date === selectedDate),
-  );
-
-  const canConfirm =
-    selectedDoctor && selectedDate && selectedSlot;
-
-  async function handleConfirm() {
-    if (!canConfirm || !user || !selectedDoctorData) {
+  useEffect(() => {
+    if (!selectedDoctor || !user) {
+      setHasVisitedDoctor(null);
       return;
     }
 
-    const selectedSlotData = doctorSlots.find(
-      (slot) => slot.id === selectedSlot,
-    );
+    let cancelled = false;
 
-    if (!selectedSlotData) {
+    getPatientDoctorVisitHistory(user.id, selectedDoctor)
+      .then((visited) => {
+        if (!cancelled) {
+          setHasVisitedDoctor(visited);
+          setCheckupType(visited ? "regular" : "normal");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setHasVisitedDoctor(false);
+          setCheckupType("normal");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDoctor, user]);
+
+  useEffect(() => {
+    if (!selectedDoctor || hasVisitedDoctor === null) {
+      setAvailableDates([]);
+      return;
+    }
+
+    let cancelled = false;
+    setScheduleStatus("loading");
+
+    getBookableDates(selectedDoctor, durationMinutes)
+      .then((dates) => {
+        if (!cancelled) {
+          setAvailableDates(dates);
+          setScheduleStatus("idle");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAvailableDates([]);
+          setScheduleStatus("error");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDoctor, durationMinutes, hasVisitedDoctor]);
+
+  useEffect(() => {
+    if (!selectedDoctor || !selectedDate) {
+      setBookableStartTimes([]);
+      return;
+    }
+
+    let cancelled = false;
+    setScheduleStatus("loading");
+
+    getBookableStartTimes(selectedDoctor, selectedDate, durationMinutes)
+      .then((startTimes) => {
+        if (!cancelled) {
+          setBookableStartTimes(startTimes);
+          setScheduleStatus("idle");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBookableStartTimes([]);
+          setScheduleStatus("error");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDoctor, selectedDate, durationMinutes]);
+
+  const isDoctorLocked = Boolean(preselectedDoctorId) || isRebook;
+
+  const selectedDoctorData = doctors.find(
+    (doctor) => doctor.id === selectedDoctor,
+  );
+
+  const canConfirm =
+    selectedDoctor &&
+    selectedDate &&
+    selectedStartTime &&
+    hasVisitedDoctor !== null;
+
+  async function handleConfirm() {
+    if (!canConfirm || !user || !selectedDoctorData || !selectedEndTime) {
       return;
     }
 
@@ -132,10 +245,11 @@ function BookingPageContent() {
           patientId: user.id,
           patientName: user.name,
           date: selectedDate,
-          startTime: selectedSlotData.startTime,
-          endTime: selectedSlotData.endTime,
+          startTime: selectedStartTime,
+          endTime: selectedEndTime,
           type: appointmentType,
           reason: appointmentReason,
+          checkupType,
         }),
       });
 
@@ -166,8 +280,25 @@ function BookingPageContent() {
   function handleReset() {
     setSelectedDoctor("");
     setSelectedDate("");
-    setSelectedSlot("");
+    setSelectedStartTime("");
+    setHasVisitedDoctor(null);
+    setCheckupType("normal");
     setBookingStatus("idle");
+  }
+
+  if (!authReady || !user) {
+    return (
+      <PortalMain maxWidth="3xl">
+        <div
+          className="animate-pulse"
+          aria-busy="true"
+          aria-label="Checking authentication"
+        >
+          <div className="h-8 w-48 rounded bg-stone-200" />
+          <div className="mt-6 h-96 rounded-xl bg-stone-200" />
+        </div>
+      </PortalMain>
+    );
   }
 
   if (status === "loading") {
@@ -255,9 +386,16 @@ function BookingPageContent() {
                 <span className="text-[var(--muted)]">Time</span>
                 <br />
                 <span className="font-semibold">
-                  {doctorSlots.find((slot) => slot.id === selectedSlot)?.startTime}
-                  {" – "}
-                  {doctorSlots.find((slot) => slot.id === selectedSlot)?.endTime}
+                  {formatTimeLabel(selectedStartTime)} –{" "}
+                  {formatTimeLabel(selectedEndTime)}
+                </span>
+              </p>
+
+              <p className="mt-4">
+                <span className="text-[var(--muted)]">Checkup</span>
+                <br />
+                <span className="font-semibold">
+                  {getCheckupTypeLabel(checkupType)}
                 </span>
               </p>
             </div>
@@ -292,7 +430,7 @@ function BookingPageContent() {
           <p className="mt-2 text-[var(--muted)]">
             {isRebook
               ? "Choose a new date and time with the same doctor, consultation type, and reason."
-              : "Select a doctor, date, and available time."}
+              : "Select a doctor, checkup type, date, and a specific time slot."}
           </p>
         </section>
 
@@ -322,52 +460,114 @@ function BookingPageContent() {
               htmlFor="doctor"
               className="block text-sm font-medium"
             >
-              Select doctor
+              {isDoctorLocked ? "Doctor" : "Select doctor"}
             </label>
 
-            <select
-              id="doctor"
-              value={selectedDoctor}
-              onChange={(event) => {
-                setSelectedDoctor(event.target.value);
-                setSelectedSlot("");
-              }}
-              className="mt-2 w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
-            >
-              <option value="">Choose a doctor</option>
+            {isDoctorLocked && selectedDoctorData ? (
+              <div className="mt-2 rounded-lg border border-[var(--line)] bg-[var(--canvas)] px-4 py-3 text-sm">
+                <p className="font-semibold">{selectedDoctorData.name}</p>
+                <p className="mt-1 text-[var(--muted)]">
+                  {selectedDoctorData.specialty}
+                </p>
+              </div>
+            ) : (
+              <select
+                id="doctor"
+                value={selectedDoctor}
+                onChange={(event) => {
+                  setSelectedDoctor(event.target.value);
+                  setSelectedDate("");
+                  setSelectedStartTime("");
+                  setHasVisitedDoctor(null);
+                }}
+                className="mt-2 w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
+              >
+                <option value="">Choose a doctor</option>
 
-              {doctors.map((doctor) => (
-                <option
-                  key={doctor.id}
-                  value={doctor.id}
-                  disabled={!doctor.available}
-                >
-                  {doctor.name} — {doctor.specialty}
-                  {!doctor.available ? " (Unavailable)" : ""}
-                </option>
-              ))}
-            </select>
+                {doctors.map((doctor) => (
+                  <option
+                    key={doctor.id}
+                    value={doctor.id}
+                    disabled={!doctor.available}
+                  >
+                    {doctor.name} — {doctor.specialty}
+                    {!doctor.available ? " (Unavailable)" : ""}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
-          <div className="mt-6">
-            <label
-              htmlFor="date"
-              className="block text-sm font-medium"
-            >
-              Select date
-            </label>
+          {selectedDoctor && hasVisitedDoctor !== null && (
+            <div className="mt-6">
+              <p className="text-sm font-medium">Checkup type</p>
 
-            <input
-              id="date"
-              type="date"
-              value={selectedDate}
-              min={new Date().toISOString().split("T")[0]}
-              onChange={(event) => {
-                setSelectedDate(event.target.value);
-                setSelectedSlot("");
-              }}
-              className="mt-2 w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
-            />
+              {hasVisitedDoctor ? (
+                <div
+                  className="mt-3 grid gap-2 sm:grid-cols-2"
+                  role="radiogroup"
+                  aria-label="Checkup type"
+                >
+                  {(["regular", "normal"] as CheckupType[]).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      role="radio"
+                      aria-checked={checkupType === type}
+                      onClick={() => {
+                        setCheckupType(type);
+                        setSelectedDate("");
+                        setSelectedStartTime("");
+                      }}
+                      className={`rounded-lg border px-4 py-3 text-left text-sm transition ${
+                        checkupType === type
+                          ? "border-[var(--brand)] bg-emerald-50 text-[var(--brand-deep)]"
+                          : "border-[var(--line)] hover:border-[var(--brand)]"
+                      }`}
+                    >
+                      <span className="block font-semibold">
+                        {type === "regular"
+                          ? "Regular checkup"
+                          : "Normal checkup"}
+                      </span>
+                      <span className="mt-1 block text-[var(--muted)]">
+                        {type === "regular" ? "15 minutes" : "30 minutes"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  <p className="font-semibold">First visit with this doctor</p>
+                  <p className="mt-1">
+                    Your appointment will be a 30-minute normal checkup.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="mt-6">
+            <p className="text-sm font-medium">Select date</p>
+
+            {!selectedDoctor || hasVisitedDoctor === null ? (
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                Choose a doctor to see available dates.
+              </p>
+            ) : scheduleStatus === "loading" && availableDates.length === 0 ? (
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                Loading available dates...
+              </p>
+            ) : (
+              <AvailabilityDatePicker
+                availableDates={availableDates}
+                selectedDate={selectedDate}
+                onSelectDate={(date) => {
+                  setSelectedDate(date);
+                  setSelectedStartTime("");
+                }}
+              />
+            )}
           </div>
 
           <div className="mt-6">
@@ -379,46 +579,47 @@ function BookingPageContent() {
               <p className="mt-2 text-sm text-[var(--muted)]">
                 Select a doctor and date to see available times.
               </p>
-            ) : doctorSlots.length === 0 ? (
+            ) : scheduleStatus === "loading" && bookableStartTimes.length === 0 ? (
               <p className="mt-2 text-sm text-[var(--muted)]">
-                No available slots for this doctor on the selected date.
+                Loading available times...
+              </p>
+            ) : bookableStartTimes.length === 0 ? (
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                No available {durationMinutes}-minute slots for this date.
+                {hasVisitedDoctor
+                  ? " Try another checkup type or date."
+                  : " Try another date."}
               </p>
             ) : (
               <div
-                className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4"
+                className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5"
                 role="group"
                 aria-label="Available appointment times"
               >
-                {doctorSlots.map((slot) => (
+                {bookableStartTimes.map((startTime) => (
                   <button
-                    key={slot.id}
+                    key={startTime}
                     type="button"
-                    disabled={!slot.available}
-                    aria-pressed={selectedSlot === slot.id}
-                    aria-label={`${formatSlotTime(slot.startTime)} to ${formatSlotTime(slot.endTime)}${slot.available ? "" : " - unavailable"}`}
-                    onClick={() => setSelectedSlot(slot.id)}
-                    className={`flex min-w-0 flex-col items-center justify-center rounded-lg border px-2 py-3 text-center transition ${
-                      selectedSlot === slot.id
+                    aria-pressed={selectedStartTime === startTime}
+                    aria-label={formatTimeLabel(startTime)}
+                    onClick={() => setSelectedStartTime(startTime)}
+                    className={`rounded-lg border px-2 py-3 text-center text-sm font-semibold transition ${
+                      selectedStartTime === startTime
                         ? "border-[var(--brand)] bg-emerald-50 text-[var(--brand-deep)]"
-                        : slot.available
-                          ? "border-[var(--line)] hover:border-[var(--brand)]"
-                          : "cursor-not-allowed border-[var(--line)] bg-stone-100 text-stone-400"
+                        : "border-[var(--line)] hover:border-[var(--brand)]"
                     }`}
                   >
-                    <span className="text-sm font-semibold leading-tight">
-                      {formatSlotTime(slot.startTime)}
-                    </span>
-                    <span className="mt-0.5 text-xs leading-tight text-[var(--muted)]">
-                      to {formatSlotTime(slot.endTime)}
-                    </span>
-                    {!slot.available && (
-                      <span className="mt-1 text-[10px] font-medium uppercase tracking-wide">
-                        Booked
-                      </span>
-                    )}
+                    {formatTimeLabel(startTime)}
                   </button>
                 ))}
               </div>
+            )}
+
+            {selectedStartTime && selectedEndTime && (
+              <p className="mt-3 text-sm text-[var(--muted)]">
+                Selected: {formatTimeLabel(selectedStartTime)} –{" "}
+                {formatTimeLabel(selectedEndTime)} ({durationMinutes} min)
+              </p>
             )}
           </div>
 

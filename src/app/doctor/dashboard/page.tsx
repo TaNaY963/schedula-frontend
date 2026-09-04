@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import PageHeader from "@/components/portal/PageHeader";
 import PortalMain from "@/components/portal/PortalMain";
+import { CalendarIcon } from "@/components/portal/icons";
 import {
   formatAppointmentDate,
   formatAppointmentStatus,
@@ -81,14 +82,6 @@ export default function DoctorDashboardPage() {
         eyebrow="Doctor portal"
         title="Good morning, Dr. Anika"
         description="Here's an overview of your appointments and clinic schedule."
-        action={
-          <Link
-            href="/doctor/calendar"
-            className="inline-flex w-fit items-center rounded-lg schedula-btn-primary px-4 py-2.5 text-sm font-medium transition hover:opacity-90"
-          >
-            Open calendar →
-          </Link>
-        }
       />
 
       <section
@@ -107,9 +100,14 @@ export default function DoctorDashboardPage() {
                 </p>
               </div>
 
-              <div className="grid size-10 place-items-center rounded-xl bg-blue-50 text-[var(--brand)]">
-                A
-              </div>
+              <Link
+                href="/doctor/calendar"
+                aria-label="Open calendar"
+                title="Open calendar"
+                className="grid size-10 place-items-center rounded-xl bg-blue-50 text-[var(--brand)] transition hover:bg-blue-100"
+              >
+                <CalendarIcon className="h-5 w-5" />
+              </Link>
             </div>
 
             <p className="mt-3 text-xs text-[var(--muted)]">
@@ -184,87 +182,6 @@ export default function DoctorDashboardPage() {
           </div>
         </section>
 
-        {/* Quick Actions */}
-        <section className="mt-8">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold">Quick actions</h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Manage your schedule and doctor profile.
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Link
-              href="/doctor/calendar"
-              className="group schedula-card p-5 transition hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-[var(--shadow-md)]"
-            >
-              <div className="flex items-center justify-between">
-                <div className="grid size-10 place-items-center rounded-xl bg-blue-50 text-[var(--brand)]">
-                  C
-                </div>
-
-                <span className="text-lg text-[var(--muted)] transition group-hover:translate-x-1 group-hover:text-[var(--brand)]">
-                  →
-                </span>
-              </div>
-
-              <h3 className="mt-4 font-semibold">
-                Manage Calendar
-              </h3>
-
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                View appointments and manage your schedule.
-              </p>
-            </Link>
-
-            <Link
-              href="/doctor/appointments"
-              className="group schedula-card p-5 transition hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-[var(--shadow-md)]"
-            >
-              <div className="flex items-center justify-between">
-                <div className="grid size-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700">
-                  A
-                </div>
-
-                <span className="text-lg text-[var(--muted)] transition group-hover:translate-x-1 group-hover:text-[var(--brand)]">
-                  →
-                </span>
-              </div>
-
-              <h3 className="mt-4 font-semibold">
-                All Appointments
-              </h3>
-
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                Review and manage your complete appointment schedule.
-              </p>
-            </Link>
-
-            <Link
-              href="/doctor/profile"
-              className="group schedula-card p-5 transition hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-[var(--shadow-md)]"
-            >
-              <div className="flex items-center justify-between">
-                <div className="grid size-10 place-items-center rounded-xl bg-purple-50 text-purple-700">
-                  P
-                </div>
-
-                <span className="text-lg text-[var(--muted)] transition group-hover:translate-x-1 group-hover:text-[var(--brand)]">
-                  →
-                </span>
-              </div>
-
-              <h3 className="mt-4 font-semibold">
-                My Profile
-              </h3>
-
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                Update your professional details and availability.
-              </p>
-            </Link>
-          </div>
-        </section>
-
         {/* Upcoming appointments */}
         <section
           className="schedula-panel mt-8 overflow-hidden"
@@ -285,12 +202,23 @@ export default function DoctorDashboardPage() {
               </p>
             </div>
 
-            <Link
-              href="/doctor/appointments"
-              className="text-sm font-medium text-[var(--brand)] hover:underline"
-            >
-              View all →
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/doctor/calendar"
+                aria-label="Open calendar"
+                title="Open calendar"
+                className="grid size-9 place-items-center rounded-lg border border-[var(--line)] text-[var(--brand)] transition hover:border-[var(--brand)] hover:bg-blue-50"
+              >
+                <CalendarIcon className="h-5 w-5" />
+              </Link>
+
+              <Link
+                href="/doctor/appointments"
+                className="text-sm font-medium text-[var(--brand)] hover:underline"
+              >
+                View all →
+              </Link>
+            </div>
           </div>
 
           {/* Loading */}
@@ -386,14 +314,16 @@ export default function DoctorDashboardPage() {
                         href={`/doctor/appointments/${appointment.id}/patient`}
                         className="rounded-lg border border-[var(--line)] bg-white px-3.5 py-2 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
                       >
-                        Patient details
+                        Patient history
                       </Link>
 
                       <Link
                         href={`/doctor/calendar?appointment=${appointment.id}`}
-                        className="rounded-lg border border-[var(--line)] bg-white px-3.5 py-2 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                        aria-label="View on calendar"
+                        title="View on calendar"
+                        className="grid size-9 place-items-center rounded-lg border border-[var(--line)] bg-white text-[var(--brand)] transition hover:border-[var(--brand)] hover:bg-blue-50"
                       >
-                        Calendar
+                        <CalendarIcon className="h-4 w-4" />
                       </Link>
 
                       <Link

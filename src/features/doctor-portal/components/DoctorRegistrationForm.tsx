@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import FlashBanner from "@/components/portal/FlashBanner";
 import { saveDoctor } from "@/lib/storage/doctors";
 
 type FormData = {
@@ -40,6 +41,7 @@ export default function DoctorRegistrationForm() {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   function updateField(field: keyof FormData, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -124,7 +126,13 @@ export default function DoctorRegistrationForm() {
         password: form.password,
       });
 
-      router.push("/login?role=doctor");
+      setSuccessMessage(
+        "Doctor account created successfully. Redirecting you to login...",
+      );
+
+      window.setTimeout(() => {
+        router.push("/login?role=doctor");
+      }, 2000);
     } catch (error) {
       setErrors({
         form:
@@ -139,6 +147,15 @@ export default function DoctorRegistrationForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
+      {successMessage && (
+        <FlashBanner
+          message={successMessage}
+          variant="success"
+          onDismiss={() => setSuccessMessage("")}
+          autoHideMs={0}
+        />
+      )}
+
       {errors.form && (
         <p
           role="alert"

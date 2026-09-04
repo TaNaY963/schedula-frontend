@@ -7,12 +7,17 @@ import { useAuth } from "@/context/AuthContext";
 import PageHeader from "@/components/portal/PageHeader";
 import PortalMain from "@/components/portal/PortalMain";
 import RebookAppointmentLink from "@/features/booking/components/RebookAppointmentLink";
+import DoctorCard from "@/features/doctors/components/DoctorCard";
+import SpecialtyCard from "@/features/doctors/components/SpecialtyCard";
+import { getDoctors } from "@/features/doctors/api/doctors";
 import {
   formatAppointmentDate,
   formatAppointmentTime,
   getAppointmentStatusClasses,
 } from "@/lib/formatters/appointments";
+import { scrollToElement } from "@/lib/scroll";
 import type { Appointment } from "@/types/appointment";
+import type { Doctor } from "@/types/doctor";
 import type { Prescription } from "@/types/prescription";
 
 type ApiResponse = {
@@ -23,12 +28,16 @@ export default function UserDashboardPage() {
     const { user } = useAuth();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+    const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(
+        null,
+    );
 
     useEffect(() => {
         async function loadDashboardData() {
             try {
-                const [appointmentsResponse, prescriptionsResponse] =
+                const [appointmentsResponse, prescriptionsResponse, doctorsResponse] =
                     await Promise.all([
                         fetch("/api/appointments"),
                         user
@@ -36,6 +45,7 @@ export default function UserDashboardPage() {
                                   `/api/prescriptions?patientId=${encodeURIComponent(user.id)}`,
                               )
                             : Promise.resolve(null),
+                        getDoctors(),
                     ]);
 
                 if (!appointmentsResponse.ok) {
@@ -51,6 +61,8 @@ export default function UserDashboardPage() {
                     const prescriptionsResult = await prescriptionsResponse.json();
                     setPrescriptions(prescriptionsResult.data ?? []);
                 }
+
+                setDoctors(doctorsResponse);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -107,6 +119,41 @@ export default function UserDashboardPage() {
         .slice(0, 3);
 
     const firstName = user?.name?.split(" ")[0] || "there";
+
+    const specialties = useMemo(
+        () => [...new Set(doctors.map((doctor) => doctor.specialty))].sort(),
+        [doctors],
+    );
+
+    const specialtyCounts = useMemo(() => {
+        return specialties.reduce<Record<string, number>>((counts, specialty) => {
+            counts[specialty] = doctors.filter(
+                (doctor) => doctor.specialty === specialty,
+            ).length;
+
+            return counts;
+        }, {});
+    }, [doctors, specialties]);
+
+    const filteredDoctors = useMemo(() => {
+        if (!selectedSpecialty) {
+            return doctors;
+        }
+
+        return doctors.filter(
+            (doctor) => doctor.specialty === selectedSpecialty,
+        );
+    }, [doctors, selectedSpecialty]);
+
+    function handleSpecialtySelect(specialty: string) {
+        setSelectedSpecialty(specialty);
+        scrollToElement("doctor-results");
+    }
+
+    function handleClearSpecialty() {
+        setSelectedSpecialty(null);
+        scrollToElement("find-doctors");
+    }
 
     return (
         <PortalMain maxWidth="6xl">
@@ -169,6 +216,100 @@ export default function UserDashboardPage() {
                         </Link>
                     </div>
                 </section>
+
+                <section id="find-doctors" className="scroll-mt-24 mt-6">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <h2 className="text-xl font-semibold">
+                                Find a doctor by specialization
+                            </h2>
+                            <p className="mt-1 text-sm text-[var(--muted)]">
+                                Choose a department to browse doctors and book
+                                directly.
+                            </p>
+                        </div>
+
+                        {selectedSpecialty ? (
+                            <button
+                                type="button"
+                                onClick={handleClearSpecialty}
+                                className="schedula-btn-secondary w-fit"
+                            >
+                                Show all doctors
+                            </button>
+                        ) : (
+                            <Link
+                                href="/doctors"
+                                className="text-sm font-semibold text-[var(--brand)] hover:underline"
+                            >
+                                View all doctors →
+                            </Link>
+                        )}
+                    </div>
+
+                    {loading ? (
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {[1, 2, 3].map((item) => (
+                                <div
+                                    key={item}
+                                    className="h-16 animate-pulse rounded-xl bg-stone-100"
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {specialties.map((specialty) => (
+                                <SpecialtyCard
+                                    key={specialty}
+                                    specialty={specialty}
+                                    doctorCount={specialtyCounts[specialty]}
+                                    isActive={selectedSpecialty === specialty}
+                                    onClick={() => handleSpecialtySelect(specialty)}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                {!loading && doctors.length > 0 && (
+                    <section
+                        id="doctor-results"
+                        className="scroll-mt-24 mt-8"
+                        aria-label="Available doctors"
+                    >
+                        <h2 className="text-xl font-semibold">
+                            {selectedSpecialty
+                                ? `${selectedSpecialty} specialists`
+                                : "Available doctors"}
+                        </h2>
+                        <p className="mt-1 text-sm text-[var(--muted)]">
+                            Showing {filteredDoctors.length} of {doctors.length}{" "}
+                            doctors
+                            {selectedSpecialty ? ` in ${selectedSpecialty}` : ""}
+                        </p>
+
+                        {filteredDoctors.length > 0 ? (
+                            <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                                {filteredDoctors.map((doctor) => (
+                                    <DoctorCard key={doctor.id} doctor={doctor} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="schedula-panel mt-4 p-8 text-center">
+                                <p className="font-medium">
+                                    No doctors found for {selectedSpecialty}.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={handleClearSpecialty}
+                                    className="mt-4 text-sm font-semibold text-[var(--brand)] hover:underline"
+                                >
+                                    View all doctors
+                                </button>
+                            </div>
+                        )}
+                    </section>
+                )}
 
                 {/* Next appointment */}
                 <section className="mt-6">

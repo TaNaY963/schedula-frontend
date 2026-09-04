@@ -169,7 +169,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 function resolvePortalRole(pathname: string): UserRole {
-  return pathname.startsWith("/doctor") ? "doctor" : "user";
+  return pathname === "/doctor" || pathname.startsWith("/doctor/")
+    ? "doctor"
+    : "user";
 }
 
 export function useAuth() {

@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { DEMO_CREDENTIALS } from "@/lib/mock-data/accounts";
 import LoginForm from "@/features/auth/components/LoginForm";
 import RoleToggle from "@/features/auth/components/RoleToggle";
+import { AUTH_REDIRECT_PARAM } from "@/features/auth/redirect";
 import { parseAuthRole, roleQuery } from "@/features/auth/role";
 import type { UserRole } from "@/context/AuthContext";
 
@@ -31,9 +32,10 @@ function LoginPageContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const role = parseAuthRole(searchParams.get("role"));
+  const redirectTo = searchParams.get(AUTH_REDIRECT_PARAM);
 
   function handleRoleChange(nextRole: UserRole) {
-    router.replace(`${pathname}${roleQuery(nextRole)}`);
+    router.replace(`${pathname}${roleQuery(nextRole, redirectTo)}`);
   }
 
   return (
@@ -55,16 +57,24 @@ function LoginPageContent() {
             <p className="mt-2 text-sm text-[var(--muted)]">
               {role === "doctor"
                 ? "Sign in to manage appointments, calendar, and prescriptions."
-                : "Sign in to book visits and manage your healthcare schedule."}
+                : redirectTo
+                  ? "Please log in to book an appointment."
+                  : "Sign in to book visits and manage your healthcare schedule."}
             </p>
           </div>
+
+          {redirectTo && role === "user" && (
+            <div className="mb-6 rounded-xl border border-[var(--line)] bg-[var(--brand-soft)]/40 px-4 py-3 text-sm text-[var(--muted)]">
+              Sign in to continue booking your appointment.
+            </div>
+          )}
 
           <div className="mb-6">
             <p className="mb-2 text-sm font-medium">I am a</p>
             <RoleToggle value={role} onChange={handleRoleChange} />
           </div>
 
-          <LoginForm key={role} role={role} />
+          <LoginForm key={role} role={role} redirectTo={redirectTo} />
 
           <div className="mt-6 rounded-xl border border-[var(--line)] bg-[var(--brand-soft)]/40 p-4 text-sm text-[var(--muted)]">
             <p className="font-semibold text-[var(--ink)]">Demo accounts</p>
@@ -87,7 +97,7 @@ function LoginPageContent() {
           <p className="mt-6 text-center text-sm text-[var(--muted)]">
             Don&apos;t have an account?{" "}
             <Link
-              href={`/register${roleQuery(role)}`}
+              href={`/register${roleQuery(role, redirectTo)}`}
               className="font-semibold text-[var(--brand)] hover:text-[var(--brand-deep)]"
             >
               Create account
