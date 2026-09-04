@@ -1,6 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+import PageHeader from "@/components/portal/PageHeader";
+import PortalMain from "@/components/portal/PortalMain";
+import {
+  prescriptionHighlightClass,
+  usePrescriptionDeepLink,
+} from "@/features/prescriptions/usePrescriptionDeepLink";
+import { DEMO_DOCTOR } from "@/lib/mock-data/accounts";
 import type { Prescription } from "@/types/prescription";
 
 export default function DoctorPrescriptionsPage() {
@@ -113,8 +121,8 @@ export default function DoctorPrescriptionsPage() {
                         }
                         : {
                             appointmentId: formData.appointmentId,
-                            doctorId: "doc-001",
-                            doctorName: "Dr. Ananya Sharma",
+                            doctorId: DEMO_DOCTOR.id,
+                            doctorName: DEMO_DOCTOR.name,
                             patientId: formData.patientId,
                             patientName: formData.patientName,
                             diagnosis: formData.diagnosis,
@@ -210,40 +218,63 @@ export default function DoctorPrescriptionsPage() {
         fetchPrescriptions();
     }, []);
 
+    const highlightedId = usePrescriptionDeepLink(prescriptions, loading, {
+        onMatch: (prescription) => {
+            handleEditPrescription(prescription);
+
+            window.setTimeout(() => {
+                document.getElementById("prescription-form")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                });
+            }, 150);
+        },
+    });
+
     if (loading) {
         return (
-            <div className="flex min-h-[60vh] items-center justify-center">
-                <p className="text-sm text-gray-500">Loading prescriptions...</p>
-            </div>
+            <PortalMain maxWidth="7xl">
+                <div className="flex min-h-[40vh] items-center justify-center">
+                    <p className="text-sm text-[var(--muted)]">Loading prescriptions...</p>
+                </div>
+            </PortalMain>
         );
     }
 
     if (error) {
         return (
-            <div className="flex min-h-[60vh] items-center justify-center">
-                <p className="text-sm text-red-500">{error}</p>
-            </div>
+            <PortalMain maxWidth="7xl">
+                <div className="flex min-h-[40vh] items-center justify-center">
+                    <p className="text-sm text-red-600">{error}</p>
+                </div>
+            </PortalMain>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-7xl">
-                {/* Header */}
-                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold text-gray-900">
-                            Prescription Management
-                        </h1>
+        <PortalMain maxWidth="7xl">
+            <PageHeader
+                eyebrow="Doctor portal"
+                title="Prescription Management"
+                description="Create and manage prescriptions for your patients."
+                action={
+                    !showCreateForm ? (
+                        <button
+                            type="button"
+                            onClick={() => setShowCreateForm(true)}
+                            className="inline-flex w-fit items-center rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+                        >
+                            + Create Prescription
+                        </button>
+                    ) : undefined
+                }
+            />
 
-                        <p className="mt-1 text-sm text-gray-500">
-                            Create and manage prescriptions for your patients.
-                        </p>
-                    </div>
-
-                    {/* Summary */}
-                    {showCreateForm && (
-                        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            {showCreateForm && (
+                        <div
+                            id="prescription-form"
+                            className="scroll-mt-28 mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+                        >
                             <div className="mb-5 flex items-center justify-between">
                                 <div>
                                     <p className="mt-1 text-sm text-gray-500">
@@ -545,18 +576,7 @@ export default function DoctorPrescriptionsPage() {
                             </div>
 
                         </div>
-                    )}
-
-
-
-                    <button
-                        type="button"
-                        onClick={() => setShowCreateForm(true)}
-                        className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
-                    >
-                        + Create Prescription
-                    </button>
-                </div>
+            )}
 
                 {/* Summary */}
                 <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -587,7 +607,11 @@ export default function DoctorPrescriptionsPage() {
                             {prescriptions.map((prescription) => (
                                 <div
                                     key={prescription.id}
-                                    className="p-5 transition hover:bg-gray-50"
+                                    id={`prescription-${prescription.id}`}
+                                    className={`scroll-mt-28 p-5 transition hover:bg-gray-50 ${prescriptionHighlightClass(
+                                        highlightedId === prescription.id &&
+                                            !showCreateForm,
+                                    )}`}
                                 >
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
@@ -618,7 +642,6 @@ export default function DoctorPrescriptionsPage() {
                         </div>
                     )}
                 </div>
-            </div>
-        </div>
+        </PortalMain>
     );
 }

@@ -3,6 +3,7 @@ import { getAvailability } from "@/features/booking/api/availability";
 import { parseAppointmentType } from "@/features/booking/rebook";
 import type { AvailabilitySlot } from "@/features/doctor-portal/availability/types";
 import { useAuth } from "@/context/AuthContext";
+import PortalMain from "@/components/portal/PortalMain";
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -13,20 +14,31 @@ import type { Doctor } from "@/types/doctor";
 
 type Status = "loading" | "ready" | "error";
 
+function formatSlotTime(time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+
+  return date.toLocaleTimeString("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export default function BookingPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen px-4 py-8 sm:px-8">
+        <PortalMain maxWidth="3xl">
           <div
-            className="mx-auto max-w-2xl animate-pulse"
+            className="animate-pulse"
             aria-busy="true"
             aria-label="Loading booking page"
           >
             <div className="h-8 w-48 rounded bg-stone-200" />
             <div className="mt-6 h-96 rounded-xl bg-stone-200" />
           </div>
-        </main>
+        </PortalMain>
       }
     >
       <BookingPageContent />
@@ -160,48 +172,46 @@ function BookingPageContent() {
 
   if (status === "loading") {
     return (
-      <main className="min-h-screen px-4 py-8 sm:px-8">
+      <PortalMain maxWidth="3xl">
         <div
-          className="mx-auto max-w-2xl animate-pulse"
+          className="animate-pulse"
           aria-busy="true"
           aria-label="Loading booking page"
         >
           <div className="h-8 w-48 rounded bg-stone-200" />
           <div className="mt-6 h-96 rounded-xl bg-stone-200" />
         </div>
-      </main>
+      </PortalMain>
     );
   }
 
   if (status === "error") {
     return (
-      <main className="min-h-screen px-4 py-8 sm:px-8">
-        <div className="mx-auto max-w-2xl">
-          <div
-            className="rounded-xl border border-red-200 bg-red-50 p-6"
-            role="alert"
-          >
-            <p className="font-medium text-red-800">
-              We couldn&apos;t load the booking information.
-            </p>
+      <PortalMain maxWidth="3xl">
+        <div
+          className="rounded-xl border border-red-200 bg-red-50 p-6"
+          role="alert"
+        >
+          <p className="font-medium text-red-800">
+            We couldn&apos;t load the booking information.
+          </p>
 
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="mt-3 text-sm font-semibold text-red-700 underline"
-            >
-              Try again
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-3 text-sm font-semibold text-red-700 underline"
+          >
+            Try again
+          </button>
         </div>
-      </main>
+      </PortalMain>
     );
   }
 
   if (bookingStatus === "confirmed") {
     return (
-      <main className="min-h-screen px-4 py-8 sm:px-8">
-        <div className="mx-auto flex min-h-[80vh] max-w-2xl items-center">
+      <PortalMain maxWidth="3xl">
+        <div className="flex min-h-[60vh] items-center">
           <section
             className="w-full rounded-xl border border-[var(--line)] bg-white p-8 text-center"
             aria-labelledby="confirmation-title"
@@ -261,33 +271,13 @@ function BookingPageContent() {
             </button>
           </section>
         </div>
-      </main>
+      </PortalMain>
     );
   }
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-2xl">
-        <header className="border-b border-[var(--line)] pb-7">
-          <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-xl bg-[var(--brand)] font-serif text-xl text-white">
-              S
-            </div>
-
-            <div>
-              <p className="text-lg font-semibold tracking-tight">
-                Schedula
-              </p>
-              <p className="text-sm text-[var(--muted)]">
-                {isRebook
-                  ? "Rebook an appointment"
-                  : "Book an appointment"}
-              </p>
-            </div>
-          </div>
-        </header>
-
-        <section className="py-8" aria-labelledby="booking-title">
+    <PortalMain maxWidth="3xl">
+        <section className="py-2" aria-labelledby="booking-title">
           <p className="text-sm font-medium text-[var(--brand)]">
             Appointment
           </p>
@@ -389,46 +379,45 @@ function BookingPageContent() {
               <p className="mt-2 text-sm text-[var(--muted)]">
                 Select a doctor and date to see available times.
               </p>
+            ) : doctorSlots.length === 0 ? (
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                No available slots for this doctor on the selected date.
+              </p>
             ) : (
               <div
-                className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
+                className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4"
                 role="group"
                 aria-label="Available appointment times"
               >
-                {doctorSlots.length === 0 ? (
-                  <p className="mt-2 text-sm text-[var(--muted)]">
-                    No available slots for this doctor on the selected date.
-                  </p>
-                ) : (
-                  <div
-                    className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
-                    role="group"
-                    aria-label="Available appointment times"
+                {doctorSlots.map((slot) => (
+                  <button
+                    key={slot.id}
+                    type="button"
+                    disabled={!slot.available}
+                    aria-pressed={selectedSlot === slot.id}
+                    aria-label={`${formatSlotTime(slot.startTime)} to ${formatSlotTime(slot.endTime)}${slot.available ? "" : " - unavailable"}`}
+                    onClick={() => setSelectedSlot(slot.id)}
+                    className={`flex min-w-0 flex-col items-center justify-center rounded-lg border px-2 py-3 text-center transition ${
+                      selectedSlot === slot.id
+                        ? "border-[var(--brand)] bg-emerald-50 text-[var(--brand-deep)]"
+                        : slot.available
+                          ? "border-[var(--line)] hover:border-[var(--brand)]"
+                          : "cursor-not-allowed border-[var(--line)] bg-stone-100 text-stone-400"
+                    }`}
                   >
-                    {doctorSlots.map((slot) => (
-                      <button
-                        key={slot.id}
-                        type="button"
-                        disabled={!slot.available}
-                        aria-pressed={selectedSlot === slot.id}
-                        aria-label={`${slot.startTime} to ${slot.endTime}${slot.available ? "" : " - unavailable"
-                          }`}
-                        onClick={() => setSelectedSlot(slot.id)}
-                        className={`rounded-lg border px-3 py-2.5 text-sm font-medium ${selectedSlot === slot.id
-                          ? "border-[var(--brand)] bg-emerald-50 text-[var(--brand-deep)]"
-                          : slot.available
-                            ? "border-[var(--line)] hover:border-[var(--brand)]"
-                            : "cursor-not-allowed border-[var(--line)] bg-stone-100 text-stone-400"
-                          }`}
-                      >
-                        {slot.startTime} - {slot.endTime}
-                        {!slot.available && (
-                          <span className="ml-1 text-xs">(Booked)</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                    <span className="text-sm font-semibold leading-tight">
+                      {formatSlotTime(slot.startTime)}
+                    </span>
+                    <span className="mt-0.5 text-xs leading-tight text-[var(--muted)]">
+                      to {formatSlotTime(slot.endTime)}
+                    </span>
+                    {!slot.available && (
+                      <span className="mt-1 text-[10px] font-medium uppercase tracking-wide">
+                        Booked
+                      </span>
+                    )}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -446,7 +435,6 @@ function BookingPageContent() {
                 : "Confirm appointment"}
           </button>
         </section>
-      </div>
-    </main>
+    </PortalMain>
   );
 }

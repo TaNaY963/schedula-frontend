@@ -38,7 +38,7 @@ function RegisterPageContent() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-6">
+    <main className="schedula-auth-shell px-4 py-8 sm:px-6">
       <div
         className={`mx-auto ${
           isDoctor
@@ -46,20 +46,20 @@ function RegisterPageContent() {
             : "flex min-h-[calc(100vh-4rem)] max-w-md items-center"
         }`}
       >
-        <section className="w-full rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm sm:p-8">
+        <section className="schedula-auth-card">
           <div className="text-center">
-            <div className="mx-auto grid size-12 place-items-center rounded-xl bg-[var(--brand)] font-serif text-2xl text-white">
+            <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] text-2xl font-bold text-white shadow-[var(--shadow-brand)]">
               S
             </div>
 
-            <h1 className="mt-5 text-2xl font-semibold tracking-tight">
+            <h1 className="mt-5 text-2xl font-bold tracking-tight text-[var(--ink)]">
               Create your account
             </h1>
 
             <p className="mt-2 text-sm text-[var(--muted)]">
               {isDoctor
-                ? "Register as a doctor to manage your clinic and appointments."
-                : "Register as a patient to book and manage your appointments."}
+                ? "Register as a doctor to manage your clinic schedule."
+                : "Register as a patient to book and track appointments."}
             </p>
           </div>
 

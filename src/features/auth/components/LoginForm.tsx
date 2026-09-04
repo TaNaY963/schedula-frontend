@@ -132,10 +132,8 @@ export default function LoginForm({ role }: { role: UserRole }) {
           onChange={(event) => setEmail(event.target.value)}
           aria-invalid={Boolean(errors.email)}
           aria-describedby={errors.email ? "email-error" : undefined}
-          className={`w-full rounded-lg border bg-white px-4 py-3 text-sm outline-none transition ${
-            errors.email
-              ? "border-red-400"
-              : "border-[var(--line)] focus:border-[var(--brand)]"
+          className={`schedula-input ${
+            errors.email ? "border-red-400" : ""
           }`}
           placeholder={
             role === "doctor" ? "doctor@example.com" : "you@example.com"
@@ -174,10 +172,8 @@ export default function LoginForm({ role }: { role: UserRole }) {
           onChange={(event) => setPassword(event.target.value)}
           aria-invalid={Boolean(errors.password)}
           aria-describedby={errors.password ? "password-error" : undefined}
-          className={`w-full rounded-lg border bg-white px-4 py-3 text-sm outline-none transition ${
-            errors.password
-              ? "border-red-400"
-              : "border-[var(--line)] focus:border-[var(--brand)]"
+          className={`schedula-input ${
+            errors.password ? "border-red-400" : ""
           }`}
           placeholder="Enter your password"
         />
@@ -192,7 +188,7 @@ export default function LoginForm({ role }: { role: UserRole }) {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full rounded-lg bg-[var(--brand)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-deep)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="schedula-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading
           ? "Signing in..."

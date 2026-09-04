@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import Link from "next/link";
-
+import PageHeader from "@/components/portal/PageHeader";
+import PortalMain from "@/components/portal/PortalMain";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -438,51 +438,30 @@ export default function DoctorCalendarPage() {
 
     if (loading) {
         return (
-            <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-                <div className="mx-auto max-w-7xl">
-                    <div className="h-8 w-64 animate-pulse rounded bg-stone-100" />
-
-                    <div className="mt-6 h-[650px] animate-pulse rounded-xl bg-stone-100" />
-                </div>
-            </main>
+            <PortalMain maxWidth="7xl">
+                <div className="h-8 w-64 animate-pulse rounded bg-stone-100" />
+                <div className="mt-6 h-[650px] animate-pulse rounded-xl bg-stone-100" />
+            </PortalMain>
         );
     }
 
     if (error) {
         return (
-            <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-                <div className="mx-auto max-w-7xl">
-                    <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
-                        {error}
-                    </div>
+            <PortalMain maxWidth="7xl">
+                <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
+                    {error}
                 </div>
-            </main>
+            </PortalMain>
         );
     }
 
     return (
-        <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-            <div className="mx-auto max-w-7xl">
-                <header className="border-b border-[var(--line)] pb-6">
-                    <Link
-                        href="/doctor/dashboard"
-                        className="text-sm font-medium text-[var(--brand)] hover:underline"
-                    >
-                        ← Doctor dashboard
-                    </Link>
-
-                    <p className="mt-5 text-sm font-medium text-[var(--brand)]">
-                        Doctor portal
-                    </p>
-
-                    <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-                        Calendar
-                    </h1>
-
-                    <p className="mt-2 text-[var(--muted)]">
-                        Manage appointments and view your availability.
-                    </p>
-                </header>
+        <PortalMain maxWidth="7xl">
+            <PageHeader
+                eyebrow="Doctor portal"
+                title="Calendar"
+                description="Manage appointments and view your availability."
+            />
 
                 <section className="mt-6 rounded-xl border border-[var(--line)] bg-white px-4 py-3">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -669,7 +648,6 @@ export default function DoctorCalendarPage() {
                         }}
                     />
                 </section>
-            </div>
-        </main >
+        </PortalMain>
     );
 }

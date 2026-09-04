@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Schedula | Appointment operations starter",
+  title: "Schedula | Doctor & patient appointment scheduling",
   description:
-    "A production-minded starter for doctor appointment booking workflows.",
+    "Book, manage, and track healthcare appointments for doctors and patients.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -4,8 +4,14 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
+import PageHeader from "@/components/portal/PageHeader";
+import PortalMain from "@/components/portal/PortalMain";
 import DownloadPrescriptionButton from "@/features/prescriptions/components/DownloadPrescriptionButton";
 import PrescriptionDetails from "@/features/prescriptions/components/PrescriptionDetails";
+import {
+  prescriptionHighlightClass,
+  usePrescriptionDeepLink,
+} from "@/features/prescriptions/usePrescriptionDeepLink";
 import type { Prescription } from "@/types/prescription";
 
 type ApiResponse = {
@@ -80,11 +86,15 @@ export default function UserPrescriptionsPage() {
     );
   }, [prescriptions, user]);
 
+  const highlightedId = usePrescriptionDeepLink(
+    userPrescriptions,
+    loading || !user,
+  );
+
   if (!user) {
     return (
-      <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-5xl">
-          <div className="rounded-xl border border-[var(--line)] bg-white p-8 text-center">
+      <PortalMain maxWidth="5xl">
+        <div className="rounded-xl border border-[var(--line)] bg-white p-8 text-center">
             <p className="font-medium">
               Please log in to view your prescriptions.
             </p>
@@ -96,27 +106,17 @@ export default function UserPrescriptionsPage() {
               Go to Login
             </Link>
           </div>
-        </div>
-      </main>
+      </PortalMain>
     );
   }
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-5xl">
-        <header className="border-b border-[var(--line)] pb-6">
-          <p className="text-sm font-medium text-[var(--brand)]">
-            Patient portal
-          </p>
-
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            My Prescriptions
-          </h1>
-
-          <p className="mt-2 text-[var(--muted)]">
-            Prescriptions written for you by your doctors.
-          </p>
-        </header>
+    <PortalMain maxWidth="5xl">
+      <PageHeader
+        eyebrow="Patient portal"
+        title="My Prescriptions"
+        description="Prescriptions written for you by your doctors."
+      />
 
         <section className="mt-6 overflow-hidden rounded-xl border border-[var(--line)] bg-white">
           {loading && (
@@ -149,7 +149,13 @@ export default function UserPrescriptionsPage() {
           {!loading && !error && userPrescriptions.length > 0 && (
             <ul className="divide-y divide-[var(--line)]">
               {userPrescriptions.map((prescription) => (
-                <li key={prescription.id} className="p-5">
+                <li
+                  key={prescription.id}
+                  id={`prescription-${prescription.id}`}
+                  className={`scroll-mt-28 p-5 ${prescriptionHighlightClass(
+                    highlightedId === prescription.id,
+                  )}`}
+                >
                   <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <h2 className="font-semibold">
@@ -180,7 +186,6 @@ export default function UserPrescriptionsPage() {
             </ul>
           )}
         </section>
-      </div>
-    </main>
+    </PortalMain>
   );
 }

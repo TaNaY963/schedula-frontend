@@ -4,61 +4,20 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
+import PageHeader from "@/components/portal/PageHeader";
+import PortalMain from "@/components/portal/PortalMain";
 import RebookAppointmentLink from "@/features/booking/components/RebookAppointmentLink";
+import {
+  formatAppointmentDate,
+  formatAppointmentTime,
+  getAppointmentStatusClasses,
+} from "@/lib/formatters/appointments";
 import type { Appointment } from "@/types/appointment";
 import type { Prescription } from "@/types/prescription";
 
 type ApiResponse = {
     data: Appointment[];
 };
-
-function formatDate(date: string) {
-    return new Date(`${date}T00:00:00`).toLocaleDateString(
-        "en-IN",
-        {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-        },
-    );
-}
-
-function formatTime(time: string) {
-    const [hours, minutes] = time.split(":").map(Number);
-
-    const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
-
-    return date.toLocaleTimeString("en-IN", {
-        hour: "numeric",
-        minute: "2-digit",
-    });
-}
-
-function getStatusClasses(status: Appointment["status"]) {
-    switch (status) {
-        case "confirmed":
-            return "bg-emerald-50 text-emerald-800 ring-emerald-200";
-
-        case "pending":
-            return "bg-amber-50 text-amber-800 ring-amber-200";
-
-        case "upcoming":
-            return "bg-blue-50 text-blue-800 ring-blue-200";
-
-        case "completed":
-            return "bg-slate-100 text-slate-700 ring-slate-200";
-
-        case "cancelled":
-            return "bg-stone-100 text-stone-600 ring-stone-200";
-
-        case "missed":
-            return "bg-red-50 text-red-700 ring-red-200";
-
-        default:
-            return "bg-gray-50 text-gray-700 ring-gray-200";
-    }
-}
 
 export default function UserDashboardPage() {
     const { user } = useAuth();
@@ -150,36 +109,16 @@ export default function UserDashboardPage() {
     const firstName = user?.name?.split(" ")[0] || "there";
 
     return (
-        <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-            <div className="mx-auto max-w-6xl">
-
-                {/* Header */}
-                <header className="border-b border-[var(--line)] pb-6">
-  <div className="flex flex-col gap-5">
-
-    {/* Top section */}
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <p className="text-sm font-medium text-[var(--brand)]">
-          Patient portal
-        </p>
-
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-          Welcome, {firstName} 👋
-        </h1>
-
-        <p className="mt-2 text-[var(--muted)]">
-          Manage your appointments and stay connected with your doctors.
-        </p>
-      </div>
-
-    </div>
-  </div>
-</header>
+        <PortalMain maxWidth="6xl">
+            <PageHeader
+                eyebrow="Patient portal"
+                title={`Welcome, ${firstName} 👋`}
+                description="Manage your appointments and stay connected with your doctors."
+            />
 
                 {/* Stats */}
                 <section className="mt-6 grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+                    <div className="schedula-stat-card">
                         <p className="text-sm text-[var(--muted)]">
                             Upcoming appointments
                         </p>
@@ -196,7 +135,7 @@ export default function UserDashboardPage() {
                         </Link>
                     </div>
 
-                    <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+                    <div className="schedula-stat-card">
                         <p className="text-sm text-[var(--muted)]">
                             Completed appointments
                         </p>
@@ -206,14 +145,14 @@ export default function UserDashboardPage() {
                         </p>
 
                         <Link
-                            href="/user/appointments"
+                            href="/user/appointments?filter=completed"
                             className="mt-3 inline-block text-sm font-semibold text-[var(--brand)] hover:underline"
                         >
                             View history →
                         </Link>
                     </div>
 
-                    <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+                    <div className="schedula-stat-card">
                         <p className="text-sm text-[var(--muted)]">
                             Prescriptions
                         </p>
@@ -246,7 +185,7 @@ export default function UserDashboardPage() {
                         </Link>
                     </div>
 
-                    <div className="mt-4 rounded-xl border border-[var(--line)] bg-white p-6">
+                    <div className="schedula-panel mt-4 p-6">
                         {loading ? (
                             <div className="h-28 animate-pulse rounded-lg bg-stone-100" />
                         ) : nextAppointment ? (
@@ -268,7 +207,7 @@ export default function UserDashboardPage() {
                                             </h3>
 
                                             <span
-                                                className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
+                                                className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getAppointmentStatusClasses(
                                                     nextAppointment.status,
                                                 )}`}
                                             >
@@ -283,12 +222,12 @@ export default function UserDashboardPage() {
 
                                         <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
                                             <span>
-                                                📅 {formatDate(nextAppointment.date)}
+                                                📅 {formatAppointmentDate(nextAppointment.date)}
                                             </span>
 
                                             <span>
-                                                🕐 {formatTime(nextAppointment.startTime)} –{" "}
-                                                {formatTime(nextAppointment.endTime)}
+                                                🕐 {formatAppointmentTime(nextAppointment.startTime)} –{" "}
+                                                {formatAppointmentTime(nextAppointment.endTime)}
                                             </span>
                                         </div>
                                     </div>
@@ -333,7 +272,7 @@ export default function UserDashboardPage() {
                         </Link>
                     </div>
 
-                    <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)] bg-white">
+                    <div className="schedula-panel mt-4 overflow-hidden">
                         {loading ? (
                             <div className="space-y-3 p-5">
                                 {[1, 2, 3].map((item) => (
@@ -359,14 +298,14 @@ export default function UserDashboardPage() {
                                             </p>
 
                                             <p className="mt-1 text-sm text-[var(--muted)]">
-                                                {formatDate(appointment.date)} ·{" "}
-                                                {formatTime(appointment.startTime)}
+                                                {formatAppointmentDate(appointment.date)} ·{" "}
+                                                {formatAppointmentTime(appointment.startTime)}
                                             </p>
                                         </Link>
 
                                         <div className="flex flex-wrap items-center gap-3">
                                             <span
-                                                className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
+                                                className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getAppointmentStatusClasses(
                                                     appointment.status,
                                                 )}`}
                                             >
@@ -392,9 +331,7 @@ export default function UserDashboardPage() {
                         )}
                     </div>
                 </section>
-
-            </div>
-        </main>
+        </PortalMain>
     );
 }
 

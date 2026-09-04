@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { useAuth } from "@/context/AuthContext";
+import PageHeader from "@/components/portal/PageHeader";
+import PortalMain from "@/components/portal/PortalMain";
 import RebookAppointmentLink from "@/features/booking/components/RebookAppointmentLink";
 import PrescriptionDetails from "@/features/prescriptions/components/PrescriptionDetails";
 import type {
@@ -179,32 +181,27 @@ export default function UserAppointmentDetailsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-3xl">
-          <div className="h-64 animate-pulse rounded-xl bg-stone-100" />
-        </div>
-      </main>
+      <PortalMain maxWidth="3xl">
+        <div className="h-64 animate-pulse rounded-xl bg-stone-100" />
+      </PortalMain>
     );
   }
 
   if (error || !appointment) {
     return (
-      <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-3xl">
-          <Link
-            href="/user/appointments"
-            className="text-sm font-medium text-[var(--brand)] hover:underline"
-          >
-            ← Back to My Appointments
-          </Link>
+      <PortalMain maxWidth="3xl">
+        <PageHeader
+          eyebrow="Patient portal"
+          title="Appointment Details"
+          description="View your appointment information."
+        />
 
-          <div className="mt-6 rounded-xl border border-[var(--line)] bg-white p-8 text-center">
-            <p className="font-medium">
-              {error || "Appointment not found."}
-            </p>
-          </div>
+        <div className="mt-6 rounded-xl border border-[var(--line)] bg-white p-8 text-center">
+          <p className="font-medium">
+            {error || "Appointment not found."}
+          </p>
         </div>
-      </main>
+      </PortalMain>
     );
   }
 
@@ -214,25 +211,27 @@ export default function UserAppointmentDetailsPage() {
     appointment.status === "upcoming";
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-3xl">
-        <Link
-          href="/user/appointments"
-          className="text-sm font-medium text-[var(--brand)] hover:underline"
-        >
-          ← Back to My Appointments
-        </Link>
+    <PortalMain maxWidth="3xl">
+      <PageHeader
+        eyebrow="Patient portal"
+        title="Appointment Details"
+        description="View your appointment information."
+        action={
+          <Link
+            href="/user/appointments"
+            className="schedula-btn-secondary shrink-0 whitespace-nowrap"
+          >
+            My Appointments
+          </Link>
+        }
+      />
 
-        <div className="mt-6 overflow-hidden rounded-xl border border-[var(--line)] bg-white">
-          <div className="border-b border-[var(--line)] p-6">
-            <p className="text-sm font-medium text-[var(--brand)]">
-              Appointment Details
-            </p>
-
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-semibold">
-                {appointment.doctorName}
-              </h1>
+      <div className="mt-6 overflow-hidden rounded-xl border border-[var(--line)] bg-white">
+        <div className="border-b border-[var(--line)] p-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-2xl font-semibold">
+              {appointment.doctorName}
+            </h2>
 
               <span
                 className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
@@ -309,11 +308,22 @@ export default function UserAppointmentDetailsPage() {
         </div>
 
         <section className="mt-6 overflow-hidden rounded-xl border border-[var(--line)] bg-white">
-          <div className="border-b border-[var(--line)] p-6">
-            <h2 className="text-xl font-semibold">Prescription</h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Issued by your doctor for this appointment.
-            </p>
+          <div className="flex flex-col gap-3 border-b border-[var(--line)] p-6 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Prescription</h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Issued by your doctor for this appointment.
+              </p>
+            </div>
+
+            {prescription && (
+              <Link
+                href={`/user/prescriptions#prescription-${prescription.id}`}
+                className="text-sm font-semibold text-[var(--brand)] hover:underline"
+              >
+                View on prescriptions page →
+              </Link>
+            )}
           </div>
 
           <div className="p-6">
@@ -326,8 +336,7 @@ export default function UserAppointmentDetailsPage() {
             )}
           </div>
         </section>
-      </div>
-    </main>
+    </PortalMain>
   );
 }
 

@@ -1,7 +1,13 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+
+import PageHeader from "@/components/portal/PageHeader";
+import PortalMain from "@/components/portal/PortalMain";
+import LogoutButton from "@/components/portal/LogoutButton";
+import TimeSlotSelect from "@/components/forms/TimeSlotSelect";
 import type { AvailabilitySlot } from "@/features/doctor-portal/availability/types";
+import type { TimeSlotInterval } from "@/lib/time-slot-options";
 
 type Profile = {
   name: string;
@@ -32,6 +38,8 @@ export default function DoctorProfilePage() {
   const [slotDate, setSlotDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [timeSlotInterval, setTimeSlotInterval] =
+    useState<TimeSlotInterval>(15);
   const [recurring, setRecurring] = useState(false);
   const [recurrence, setRecurrence] = useState<"daily" | "weekly">("weekly");
   const [slotError, setSlotError] = useState("");
@@ -152,23 +160,14 @@ async function handleRemoveSlot(id: string) {
 
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-4xl">
-        <header className="border-b border-[var(--line)] pb-6">
-          <p className="text-sm font-medium text-[var(--brand)]">
-            Doctor portal
-          </p>
+    <PortalMain maxWidth="4xl">
+      <PageHeader
+        eyebrow="Doctor portal"
+        title="My Profile"
+        description="View and update your professional and contact details."
+      />
 
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            My Profile
-          </h1>
-
-          <p className="mt-2 text-[var(--muted)]">
-            View and update your professional and contact details.
-          </p>
-        </header>
-
-        <form
+      <form
           onSubmit={handleSubmit}
           className="mt-8 rounded-xl border border-[var(--line)] bg-white p-5 sm:p-8"
         >
@@ -304,39 +303,48 @@ async function handleRemoveSlot(id: string) {
     </div>
 
     <div className="grid gap-4 sm:grid-cols-2">
-      <div>
+      <div className="sm:col-span-2">
         <label
-          htmlFor="start-time"
+          htmlFor="time-slot-interval"
           className="mb-2 block text-sm font-medium"
         >
-          Start time
+          Time slot interval
         </label>
 
-        <input
-          id="start-time"
-          type="time"
-          value={startTime}
-          onChange={(event) => setStartTime(event.target.value)}
-          className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="end-time"
-          className="mb-2 block text-sm font-medium"
+        <select
+          id="time-slot-interval"
+          value={timeSlotInterval}
+          onChange={(event) => {
+            setTimeSlotInterval(
+              Number(event.target.value) as TimeSlotInterval,
+            );
+            setStartTime("");
+            setEndTime("");
+          }}
+          className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)] sm:max-w-xs"
         >
-          End time
-        </label>
-
-        <input
-          id="end-time"
-          type="time"
-          value={endTime}
-          onChange={(event) => setEndTime(event.target.value)}
-          className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:border-[var(--brand)]"
-        />
+          <option value={15}>15 minutes</option>
+          <option value={30}>30 minutes</option>
+        </select>
       </div>
+
+      <TimeSlotSelect
+        id="start-time"
+        label="Start time"
+        value={startTime}
+        intervalMinutes={timeSlotInterval}
+        onChange={setStartTime}
+        required
+      />
+
+      <TimeSlotSelect
+        id="end-time"
+        label="End time"
+        value={endTime}
+        intervalMinutes={timeSlotInterval}
+        onChange={setEndTime}
+        required
+      />
     </div>
 
     <label className="flex items-center gap-3 text-sm">
@@ -446,8 +454,18 @@ async function handleRemoveSlot(id: string) {
     </ul>
   )}
 </section>
-      </div>
-    </main>
+
+      <section className="mt-8 rounded-xl border border-[var(--line)] bg-white p-5 sm:p-8">
+        <h2 className="text-lg font-semibold">Account</h2>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          Sign out of your doctor account on this device.
+        </p>
+
+        <div className="mt-5 flex justify-end">
+          <LogoutButton variant="profile" />
+        </div>
+      </section>
+    </PortalMain>
   );
 }
 

@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import PageHeader from "@/components/portal/PageHeader";
+import PortalMain from "@/components/portal/PortalMain";
 import RebookAppointmentLink from "@/features/booking/components/RebookAppointmentLink";
-import type {
-  Appointment,
-  AppointmentStatus,
-} from "@/types/appointment";
+import {
+  formatAppointmentDate,
+  formatAppointmentStatus,
+  formatAppointmentTime,
+  getAppointmentStatusClasses,
+} from "@/lib/formatters/appointments";
+import type { Appointment } from "@/types/appointment";
 
 type ApiResponse = {
   data: Appointment[];
@@ -22,61 +28,36 @@ const filters: { label: string; value: Filter }[] = [
   { label: "Missed", value: "missed" },
 ];
 
-function formatDate(date: string) {
-  return new Date(`${date}T00:00:00`).toLocaleDateString(
-    "en-IN",
-    {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    },
-  );
-}
-
-function formatTime(time: string) {
-  const [hours, minutes] = time.split(":").map(Number);
-
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-
-  return date.toLocaleTimeString("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function formatStatus(status: AppointmentStatus) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-function getStatusClasses(status: AppointmentStatus) {
-  switch (status) {
-    case "confirmed":
-      return "bg-emerald-50 text-emerald-800 ring-emerald-200";
-
-    case "upcoming":
-      return "bg-blue-50 text-blue-800 ring-blue-200";
-
-    case "completed":
-      return "bg-slate-100 text-slate-700 ring-slate-200";
-
-    case "cancelled":
-      return "bg-stone-100 text-stone-600 ring-stone-200";
-
-    case "missed":
-      return "bg-red-50 text-red-700 ring-red-200";
-
-    default:
-      return "bg-gray-50 text-gray-700 ring-gray-200";
-  }
+function isFilter(value: string | null): value is Filter {
+  return filters.some((item) => item.value === value);
 }
 
 export default function UserAppointmentsPage() {
+  return (
+    <Suspense
+      fallback={
+        <PortalMain maxWidth="5xl">
+          <div className="space-y-4">
+            <div className="h-24 animate-pulse rounded-xl bg-stone-100" />
+            <div className="h-40 animate-pulse rounded-xl bg-stone-100" />
+          </div>
+        </PortalMain>
+      }
+    >
+      <UserAppointmentsContent />
+    </Suspense>
+  );
+}
+
+function UserAppointmentsContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const filterParam = searchParams.get("filter");
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [filter, setFilter] = useState<Filter>("upcoming");
+  const [filter, setFilter] = useState<Filter>(() =>
+    isFilter(filterParam) ? filterParam : "upcoming",
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -123,6 +104,12 @@ export default function UserAppointmentsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isFilter(filterParam)) {
+      setFilter(filterParam);
+    }
+  }, [filterParam]);
+
   const userAppointments = useMemo(() => {
     if (!user) {
       return [];
@@ -148,33 +135,20 @@ export default function UserAppointmentsPage() {
   }, [userAppointments, filter]);
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-  
-      <div className="mx-auto max-w-5xl">
-        <header className="border-b border-[var(--line)] pb-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-[var(--brand)]">
-                Patient portal
-              </p>
-
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-                My Appointments
-              </h1>
-
-              <p className="mt-2 text-[var(--muted)]">
-                View and manage your appointments with doctors.
-              </p>
-            </div>
-
-            <Link
-              href="/doctors"
-              className="w-fit rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-deep)]"
-            >
-              Book Appointment
-            </Link>
-          </div>
-        </header>
+    <PortalMain maxWidth="5xl">
+      <PageHeader
+        eyebrow="Patient portal"
+        title="My Appointments"
+        description="View and manage your appointments with doctors."
+        action={
+          <Link
+            href="/doctors"
+            className="w-fit rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-deep)]"
+          >
+            Book Appointment
+          </Link>
+        }
+      />
 
         <section className="mt-6 rounded-xl border border-[var(--line)] bg-white p-4">
           <div className="flex gap-2 overflow-x-auto">
@@ -262,11 +236,11 @@ export default function UserAppointmentsPage() {
                             </h2>
 
                             <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getAppointmentStatusClasses(
                                 appointment.status,
                               )}`}
                             >
-                              {formatStatus(appointment.status)}
+                              {formatAppointmentStatus(appointment.status)}
                             </span>
                           </div>
 
@@ -277,12 +251,12 @@ export default function UserAppointmentsPage() {
 
                           <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
                             <span>
-                              📅 {formatDate(appointment.date)}
+                              📅 {formatAppointmentDate(appointment.date)}
                             </span>
 
                             <span>
-                              🕐 {formatTime(appointment.startTime)}{" "}
-                              – {formatTime(appointment.endTime)}
+                              🕐 {formatAppointmentTime(appointment.startTime)}{" "}
+                              – {formatAppointmentTime(appointment.endTime)}
                             </span>
 
                             <span>
@@ -305,7 +279,6 @@ export default function UserAppointmentsPage() {
               </ul>
             )}
         </section>
-      </div>
-    </main>
+    </PortalMain>
   );
 }

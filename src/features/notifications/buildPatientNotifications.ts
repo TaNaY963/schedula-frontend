@@ -52,15 +52,27 @@ export function buildPatientNotifications(
       appointment.status === "confirmed" ||
       appointment.status === "upcoming"
     ) {
-      notifications.push({
-        id: `${appointment.id}:confirmed`,
-        appointmentId: appointment.id,
-        title: "Appointment confirmed",
-        message: `Your appointment with ${appointment.doctorName} on ${formatAppointmentDate(appointment.date)} has been confirmed.`,
-        date: appointment.updatedAt,
-        type: "status",
-        href,
-      });
+      if (appointment.rescheduledAt) {
+        notifications.push({
+          id: `${appointment.id}:rescheduled`,
+          appointmentId: appointment.id,
+          title: "Appointment rescheduled",
+          message: `Your appointment with ${appointment.doctorName} has been rescheduled to ${formatAppointmentDate(appointment.date)} at ${formatAppointmentTime(appointment.startTime)}.`,
+          date: appointment.rescheduledAt,
+          type: "status",
+          href,
+        });
+      } else {
+        notifications.push({
+          id: `${appointment.id}:confirmed`,
+          appointmentId: appointment.id,
+          title: "Appointment confirmed",
+          message: `Your appointment with ${appointment.doctorName} on ${formatAppointmentDate(appointment.date)} has been confirmed.`,
+          date: appointment.updatedAt,
+          type: "status",
+          href,
+        });
+      }
 
       const millisecondsUntilStart =
         getAppointmentStart(appointment).getTime() - now.getTime();
@@ -119,14 +131,23 @@ export function buildPatientNotifications(
   }
 
   for (const prescription of prescriptions) {
+    const wasUpdated =
+      prescription.updatedAt &&
+      prescription.createdAt &&
+      prescription.updatedAt !== prescription.createdAt;
+
     notifications.push({
-      id: `prescription:${prescription.id}`,
+      id: wasUpdated
+        ? `prescription:${prescription.id}:updated`
+        : `prescription:${prescription.id}`,
       appointmentId: prescription.appointmentId,
-      title: "Prescription ready",
-      message: `${prescription.doctorName} added a prescription for ${prescription.diagnosis}.`,
-      date: prescription.createdAt,
+      title: wasUpdated ? "Prescription updated" : "Prescription ready",
+      message: wasUpdated
+        ? `${prescription.doctorName} updated your prescription for ${prescription.diagnosis}.`
+        : `${prescription.doctorName} added a prescription for ${prescription.diagnosis}.`,
+      date: wasUpdated ? prescription.updatedAt : prescription.createdAt,
       type: "prescription",
-      href: `/user/appointments/${prescription.appointmentId}`,
+      href: `/user/prescriptions#prescription-${prescription.id}`,
     });
   }
 

@@ -33,5 +33,7 @@ export interface Appointment {
   updatedAt: string;
 
   prescriptionAvailable?: boolean;
+
+  rescheduledAt?: string;
 }
 
