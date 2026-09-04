@@ -1,8 +1,10 @@
 import type { Doctor } from "@/types/doctor";
 import { useRouter } from "next/navigation";
 
+import { useAuth } from "@/context/AuthContext";
 import DoctorAvatar from "@/features/doctors/components/DoctorAvatar";
 import SpecialtyIcon from "@/features/doctors/components/SpecialtyIcon";
+import { buildBookingPath, navigateToBooking } from "@/features/auth/redirect";
 import { getSpecialtyMeta } from "@/features/doctors/specialties";
 
 type DoctorCardProps = {
@@ -11,10 +13,15 @@ type DoctorCardProps = {
 
 export default function DoctorCard({ doctor }: DoctorCardProps) {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const specialtyMeta = getSpecialtyMeta(doctor.specialty);
 
   function handleDoctorAppointment() {
-    router.push(`/booking?doctorId=${encodeURIComponent(doctor.id)}`);
+    navigateToBooking(
+      router,
+      isAuthenticated,
+      buildBookingPath({ doctorId: doctor.id }),
+    );
   }
 
   return (

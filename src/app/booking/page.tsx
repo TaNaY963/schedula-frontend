@@ -8,6 +8,7 @@ import {
 import AvailabilityDatePicker from "@/features/booking/components/AvailabilityDatePicker";
 import { parseAppointmentType } from "@/features/booking/rebook";
 import { useAuth } from "@/context/AuthContext";
+import { getPatientLoginHref } from "@/features/auth/redirect";
 import PortalMain from "@/components/portal/PortalMain";
 import {
   addMinutesToTime,
@@ -47,7 +48,7 @@ export default function BookingPage() {
 }
 
 function BookingPageContent() {
-  const { user } = useAuth();
+  const { user, isReady: authReady } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -83,7 +84,29 @@ function BookingPageContent() {
     ? addMinutesToTime(selectedStartTime, durationMinutes)
     : "";
 
+  const bookingPath = useMemo(
+    () =>
+      `/booking${
+        searchParams.toString() ? `?${searchParams.toString()}` : ""
+      }`,
+    [searchParams],
+  );
+
   useEffect(() => {
+    if (!authReady) {
+      return;
+    }
+
+    if (!user) {
+      router.replace(getPatientLoginHref(bookingPath));
+    }
+  }, [authReady, user, router, bookingPath]);
+
+  useEffect(() => {
+    if (!authReady || !user) {
+      return;
+    }
+
     Promise.all([getDoctors(), getAvailability()])
       .then(([doctorData]) => {
         setDoctors(doctorData);
@@ -92,7 +115,7 @@ function BookingPageContent() {
       .catch(() => {
         setStatus("error");
       });
-  }, []);
+  }, [authReady, user]);
 
   useEffect(() => {
     if (status !== "ready" || !preselectedDoctorId) {
@@ -261,6 +284,21 @@ function BookingPageContent() {
     setHasVisitedDoctor(null);
     setCheckupType("normal");
     setBookingStatus("idle");
+  }
+
+  if (!authReady || !user) {
+    return (
+      <PortalMain maxWidth="3xl">
+        <div
+          className="animate-pulse"
+          aria-busy="true"
+          aria-label="Checking authentication"
+        >
+          <div className="h-8 w-48 rounded bg-stone-200" />
+          <div className="mt-6 h-96 rounded-xl bg-stone-200" />
+        </div>
+      </PortalMain>
+    );
   }
 
   if (status === "loading") {

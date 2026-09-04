@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import FlashBanner from "@/components/portal/FlashBanner";
+import { buildAuthHref } from "@/features/auth/redirect";
 import { saveUser } from "@/lib/storage/users";
 
 type FormErrors = {
@@ -13,7 +14,11 @@ type FormErrors = {
   form?: string;
 };
 
-export default function RegisterForm() {
+export default function RegisterForm({
+  redirectTo,
+}: {
+  redirectTo?: string | null;
+}) {
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -96,7 +101,12 @@ export default function RegisterForm() {
       );
 
       window.setTimeout(() => {
-        router.push("/login?role=user");
+        router.push(
+          buildAuthHref("/login", {
+            role: "user",
+            redirect: redirectTo ?? null,
+          }),
+        );
       }, 2000);
     } catch (error) {
       setErrors({

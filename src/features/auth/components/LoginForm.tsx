@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/context/AuthContext";
+import { getPostLoginPath } from "@/features/auth/redirect";
 import { getDoctors } from "@/lib/storage/doctors";
 import { getUsers } from "@/lib/storage/users";
 
@@ -14,7 +15,13 @@ type FormErrors = {
   form?: string;
 };
 
-export default function LoginForm({ role }: { role: UserRole }) {
+export default function LoginForm({
+  role,
+  redirectTo,
+}: {
+  role: UserRole;
+  redirectTo?: string | null;
+}) {
   const router = useRouter();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
@@ -101,7 +108,7 @@ export default function LoginForm({ role }: { role: UserRole }) {
         role: "user",
       });
 
-      router.push("/user/dashboard");
+      router.push(getPostLoginPath(redirectTo ?? null));
     } finally {
       setIsLoading(false);
     }

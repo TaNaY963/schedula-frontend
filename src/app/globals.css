@@ -344,3 +344,46 @@ a:focus-visible {
 .fc .schedula-availability .fc-event-main {
   color: var(--brand-deep) !important;
 }
+
+@keyframes assistant-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform: scale(1.12);
+    opacity: 0.12;
+  }
+}
+
+@keyframes assistant-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.assistant-slide-up {
+  animation: assistant-slide-up 220ms ease-out;
+}
+
+.assistant-pulse-ring {
+  animation: assistant-pulse 2.8s ease-in-out infinite;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-slide-up,
+  .assistant-pulse-ring,
+  .assistant-fab {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -9,6 +8,7 @@ import PortalMain from "@/components/portal/PortalMain";
 import DoctorCard from "@/features/doctors/components/DoctorCard";
 import SpecialtyCard from "@/features/doctors/components/SpecialtyCard";
 import { getDoctors } from "@/features/doctors/api/doctors";
+import { scrollToElement } from "@/lib/scroll";
 import type { Doctor } from "@/types/doctor";
 
 type Status = "loading" | "ready" | "error";
@@ -34,6 +34,14 @@ export default function DoctorsPageContent() {
       });
   }, []);
 
+  useEffect(() => {
+    if (status !== "ready" || !initialSpecialty) {
+      return;
+    }
+
+    scrollToElement("doctor-results");
+  }, [status, initialSpecialty]);
+
   const specialties = useMemo(
     () => [...new Set(doctors.map((doctor) => doctor.specialty))].sort(),
     [doctors],
@@ -57,6 +65,16 @@ export default function DoctorsPageContent() {
     }, {});
   }, [doctors, specialties]);
 
+  function handleSpecialtySelect(specialty: string) {
+    setSelectedSpecialty(specialty);
+    scrollToElement("doctor-results");
+  }
+
+  function handleClearSpecialty() {
+    setSelectedSpecialty(null);
+    scrollToElement("find-doctors");
+  }
+
   return (
     <PortalMain maxWidth="6xl">
       <PageHeader
@@ -66,7 +84,11 @@ export default function DoctorsPageContent() {
       />
 
       {status === "ready" && specialties.length > 0 && (
-        <section className="mt-8" aria-label="Filter by specialization">
+        <section
+          id="find-doctors"
+          className="scroll-mt-24 mt-8"
+          aria-label="Filter by specialization"
+        >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold">Browse by specialization</h2>
@@ -78,7 +100,7 @@ export default function DoctorsPageContent() {
             {selectedSpecialty && (
               <button
                 type="button"
-                onClick={() => setSelectedSpecialty(null)}
+                onClick={handleClearSpecialty}
                 className="schedula-btn-secondary w-fit"
               >
                 Show all doctors
@@ -93,7 +115,7 @@ export default function DoctorsPageContent() {
                 specialty={specialty}
                 doctorCount={specialtyCounts[specialty]}
                 isActive={selectedSpecialty === specialty}
-                onClick={() => setSelectedSpecialty(specialty)}
+                onClick={() => handleSpecialtySelect(specialty)}
               />
             ))}
           </div>
@@ -101,7 +123,7 @@ export default function DoctorsPageContent() {
       )}
 
       {selectedSpecialty && status === "ready" && (
-        <section className="mt-8">
+        <section id="doctor-results" className="scroll-mt-24 mt-8">
           <h2 className="text-lg font-semibold">
             {selectedSpecialty} specialists
           </h2>
@@ -146,7 +168,10 @@ export default function DoctorsPageContent() {
       )}
 
       {status === "ready" && filteredDoctors.length === 0 && (
-        <div className="mt-8 schedula-panel p-8 text-center">
+        <div
+          id="doctor-results"
+          className="scroll-mt-24 mt-8 schedula-panel p-8 text-center"
+        >
           <p className="font-medium">
             {selectedSpecialty
               ? `No doctors found for ${selectedSpecialty}.`
@@ -156,7 +181,7 @@ export default function DoctorsPageContent() {
           {selectedSpecialty && (
             <button
               type="button"
-              onClick={() => setSelectedSpecialty(null)}
+              onClick={handleClearSpecialty}
               className="mt-4 text-sm font-semibold text-[var(--brand)] hover:underline"
             >
               View all doctors
@@ -167,7 +192,8 @@ export default function DoctorsPageContent() {
 
       {status === "ready" && filteredDoctors.length > 0 && (
         <section
-          className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3"
+          id={selectedSpecialty ? undefined : "doctor-results"}
+          className="scroll-mt-24 mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3"
           aria-label="Available doctors"
         >
           {filteredDoctors.map((doctor) => (
@@ -176,14 +202,6 @@ export default function DoctorsPageContent() {
         </section>
       )}
 
-      <div className="mt-8 text-center">
-        <Link
-          href="/user/dashboard"
-          className="text-sm font-semibold text-[var(--brand)] hover:underline"
-        >
-          Back to dashboard
-        </Link>
-      </div>
     </PortalMain>
   );
 }
