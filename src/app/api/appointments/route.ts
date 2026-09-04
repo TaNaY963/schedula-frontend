@@ -133,6 +133,11 @@ export async function PATCH(request: Request) {
     }
 
     // Update date/time when rescheduling
+    const isReschedule =
+      date !== undefined ||
+      startTime !== undefined ||
+      endTime !== undefined;
+
     if (date) {
       appointment.date = date;
     }
@@ -143,6 +148,10 @@ export async function PATCH(request: Request) {
 
     if (endTime) {
       appointment.endTime = endTime;
+    }
+
+    if (isReschedule) {
+      appointment.rescheduledAt = new Date().toISOString();
     }
 
     appointment.updatedAt = new Date().toISOString();

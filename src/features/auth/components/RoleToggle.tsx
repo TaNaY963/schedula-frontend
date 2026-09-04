@@ -24,7 +24,7 @@ export default function RoleToggle({
 }) {
   return (
     <div
-      className="grid grid-cols-2 gap-2 rounded-xl bg-stone-100 p-1"
+      className="grid grid-cols-2 gap-2 rounded-xl bg-[#eef4fa] p-1"
       role="radiogroup"
       aria-label="Account type"
     >
@@ -40,7 +40,7 @@ export default function RoleToggle({
             onClick={() => onChange(role.id)}
             className={`rounded-lg px-3 py-2.5 text-left transition ${
               selected
-                ? "bg-white shadow-sm"
+                ? "bg-white shadow-[var(--shadow-sm)] ring-1 ring-[var(--line)]"
                 : "text-[var(--muted)] hover:text-[var(--ink)]"
             }`}
           >

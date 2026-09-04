@@ -3,6 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
+import PageHeader from "@/components/portal/PageHeader";
+import PortalMain from "@/components/portal/PortalMain";
+import {
+  formatAppointmentDate,
+  formatAppointmentStatus,
+  formatAppointmentTime,
+  getAppointmentStatusClasses,
+} from "@/lib/formatters/appointments";
 import type {
   Appointment,
   AppointmentStatus,
@@ -23,55 +31,6 @@ const filters: { label: string; value: Filter }[] = [
   { label: "Cancelled", value: "cancelled" },
   { label: "Missed", value: "missed" },
 ];
-
-function formatDate(date: string) {
-  return new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function formatTime(time: string) {
-  const [hours, minutes] = time.split(":").map(Number);
-
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-
-  return date.toLocaleTimeString("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function formatStatus(status: AppointmentStatus) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
-
-function getStatusClasses(status: AppointmentStatus) {
-  switch (status) {
-    case "confirmed":
-      return "bg-emerald-50 text-emerald-700 ring-emerald-200";
-
-    case "pending":
-      return "bg-amber-50 text-amber-700 ring-amber-200";
-
-    case "upcoming":
-      return "bg-blue-50 text-blue-700 ring-blue-200";
-
-    case "completed":
-      return "bg-slate-100 text-slate-700 ring-slate-200";
-
-    case "cancelled":
-      return "bg-stone-100 text-stone-600 ring-stone-200";
-
-    case "missed":
-      return "bg-red-50 text-red-700 ring-red-200";
-
-    default:
-      return "bg-gray-50 text-gray-700 ring-gray-200";
-  }
-}
 
 function isPastAppointment(appointment: Appointment) {
   const appointmentDateTime = new Date(
@@ -268,90 +227,24 @@ export default function DoctorAppointmentsPage() {
     search || dateFilter || filter !== "all";
 
   return (
-    <main className="min-h-screen bg-[var(--canvas)] px-4 py-6 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-7xl">
-
-        {/* Header */}
-        <header className="flex items-center justify-between border-b border-[var(--line)] pb-5">
+    <PortalMain maxWidth="7xl">
+      <PageHeader
+        eyebrow="Doctor portal"
+        title="Appointments"
+        description="Manage your patient appointments and consultation schedule."
+        action={
           <Link
-            href="/doctor/dashboard"
-            className="flex items-center gap-3"
+            href="/doctor/calendar"
+            className="inline-flex w-fit items-center rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
           >
-            <div className="grid size-10 place-items-center rounded-xl bg-[var(--brand)] font-serif text-xl text-white">
-              S
-            </div>
-
-            <div>
-              <p className="text-lg font-semibold tracking-tight">
-                Schedula
-              </p>
-
-              <p className="text-sm text-[var(--muted)]">
-                Doctor portal
-              </p>
-            </div>
+            Open calendar →
           </Link>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="grid size-10 place-items-center rounded-full border border-[var(--line)] bg-white text-sm transition hover:border-[var(--brand)]"
-            >
-              •
-            </button>
-
-            <Link
-              href="/doctor/profile"
-              className="flex items-center gap-3 rounded-full border border-[var(--line)] bg-white py-1.5 pl-1.5 pr-4 transition hover:border-[var(--brand)]"
-            >
-              <div className="grid size-8 place-items-center rounded-full bg-[var(--brand)] text-xs font-semibold text-white">
-                AR
-              </div>
-
-              <div className="hidden sm:block">
-                <p className="text-sm font-medium">
-                  Dr. Anika Rao
-                </p>
-
-                <p className="text-xs text-[var(--muted)]">
-                  Doctor
-                </p>
-              </div>
-            </Link>
-          </div>
-        </header>
-
-        {/* Page heading */}
-        <section className="py-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-[var(--brand)]">
-                Doctor portal
-              </p>
-
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-                Appointments
-              </h1>
-
-              <p className="mt-2 max-w-2xl text-[var(--muted)]">
-                Manage your patient appointments and consultation
-                schedule.
-              </p>
-            </div>
-
-            <Link
-              href="/doctor/calendar"
-              className="inline-flex w-fit items-center rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-            >
-              Open calendar →
-            </Link>
-          </div>
-        </section>
+        }
+      />
 
         {/* Summary cards */}
         <section
-          className="grid gap-4 sm:grid-cols-3"
+          className="mt-8 grid gap-4 sm:grid-cols-3"
           aria-label="Appointment summary"
         >
           <div className="rounded-2xl border border-[var(--line)] bg-white p-5">
@@ -651,11 +544,11 @@ export default function DoctorAppointmentsPage() {
                                 </p>
 
                                 <span
-                                  className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
+                                  className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getAppointmentStatusClasses(
                                     appointment.status,
                                   )}`}
                                 >
-                                  {formatStatus(
+                                  {formatAppointmentStatus(
                                     appointment.status,
                                   )}
                                 </span>
@@ -669,17 +562,18 @@ export default function DoctorAppointmentsPage() {
                               {/* Appointment metadata */}
                               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
                                 <span>
-                                  {formatDate(
+                                  {formatAppointmentDate(
                                     appointment.date,
+                                    "short",
                                   )}
                                 </span>
 
                                 <span>
-                                  {formatTime(
+                                  {formatAppointmentTime(
                                     appointment.startTime,
                                   )}{" "}
                                   –{" "}
-                                  {formatTime(
+                                  {formatAppointmentTime(
                                     appointment.endTime,
                                   )}
                                 </span>
@@ -827,9 +721,6 @@ export default function DoctorAppointmentsPage() {
               </ul>
             )}
         </section>
-
-        <div className="h-8" />
-      </div>
-    </main>
+    </PortalMain>
   );
 }

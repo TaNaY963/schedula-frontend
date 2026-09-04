@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { DEMO_CREDENTIALS } from "@/lib/mock-data/accounts";
 import LoginForm from "@/features/auth/components/LoginForm";
 import RoleToggle from "@/features/auth/components/RoleToggle";
 import { parseAuthRole, roleQuery } from "@/features/auth/role";
@@ -36,28 +37,25 @@ function LoginPageContent() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-6">
+    <main className="schedula-auth-shell px-4 py-8 sm:px-6">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center">
-        <section
-          className="w-full rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm sm:p-8"
-          aria-labelledby="login-title"
-        >
+        <section className="schedula-auth-card" aria-labelledby="login-title">
           <div className="mb-8 text-center">
-            <div className="mx-auto grid size-12 place-items-center rounded-xl bg-[var(--brand)] font-serif text-2xl text-white">
+            <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-deep)] text-2xl font-bold text-white shadow-[var(--shadow-brand)]">
               S
             </div>
 
             <h1
               id="login-title"
-              className="mt-5 text-2xl font-semibold tracking-tight"
+              className="mt-5 text-2xl font-bold tracking-tight text-[var(--ink)]"
             >
               Welcome back
             </h1>
 
             <p className="mt-2 text-sm text-[var(--muted)]">
               {role === "doctor"
-                ? "Sign in to manage appointments and availability."
-                : "Sign in to book visits and view your prescriptions."}
+                ? "Sign in to manage appointments, calendar, and prescriptions."
+                : "Sign in to book visits and manage your healthcare schedule."}
             </p>
           </div>
 
@@ -67,6 +65,24 @@ function LoginPageContent() {
           </div>
 
           <LoginForm key={role} role={role} />
+
+          <div className="mt-6 rounded-xl border border-[var(--line)] bg-[var(--brand-soft)]/40 p-4 text-sm text-[var(--muted)]">
+            <p className="font-semibold text-[var(--ink)]">Demo accounts</p>
+            <p className="mt-2">
+              Patient:{" "}
+              <span className="font-medium text-[var(--ink)]">
+                {DEMO_CREDENTIALS.patient.email}
+              </span>{" "}
+              / {DEMO_CREDENTIALS.patient.password}
+            </p>
+            <p className="mt-1">
+              Doctor:{" "}
+              <span className="font-medium text-[var(--ink)]">
+                {DEMO_CREDENTIALS.doctor.email}
+              </span>{" "}
+              / {DEMO_CREDENTIALS.doctor.password}
+            </p>
+          </div>
 
           <p className="mt-6 text-center text-sm text-[var(--muted)]">
             Don&apos;t have an account?{" "}
@@ -79,7 +95,7 @@ function LoginPageContent() {
           </p>
 
           <p className="mt-6 text-center text-xs text-[var(--muted)]">
-            Schedula · Clinic operations
+            Secure healthcare scheduling by Schedula
           </p>
         </section>
       </div>

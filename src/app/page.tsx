@@ -1,5 +1,7 @@
 ﻿"use client";
 import { useEffect, useMemo, useState } from "react";
+
+import BrandLogo from "@/components/portal/BrandLogo";
 import type { Appointment, AppointmentStatus } from "@/types/appointment";
 type Filter = "all" | AppointmentStatus;
 type ApiResponse = { data: Appointment[] };
@@ -64,25 +66,19 @@ export default function Home() {
     { all: 0, confirmed: 0, pending: 0, cancelled: 0, upcoming: 0, completed: 0, missed: 0 },
   );
   return (
-    <main className="min-h-screen px-4 py-5 sm:px-8 sm:py-8 lg:px-12">
+    <main className="schedula-shell px-4 py-5 sm:px-8 sm:py-8 lg:px-12">
       <div className="mx-auto max-w-7xl">
         <header className="flex flex-col gap-6 border-b border-[var(--line)] pb-7 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-xl bg-[var(--brand)] font-serif text-xl text-white">S</div>
-            <div>
-              <p className="text-lg font-semibold tracking-tight">Schedula</p>
-              <p className="text-sm text-[var(--muted)]">Clinic operations</p>
-            </div>
-          </div>
+          <BrandLogo subtitle="Clinic scheduling dashboard" />
         </header>
         <section className="py-8" aria-labelledby="dashboard-title">
-          <p className="text-sm font-medium text-[var(--brand)]">Friday, 28 August</p>
-          <div className="mt-2 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <p className="schedula-eyebrow">Today&apos;s schedule</p>
+          <div className="mt-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h1 id="dashboard-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h1 id="dashboard-title" className="text-3xl font-bold tracking-tight sm:text-4xl">
                 Today&apos;s appointments
               </h1>
-              <p className="mt-2 max-w-xl text-[var(--muted)]">Keep the day moving with a clear view of every patient and visit status.</p>
+              <p className="mt-2 max-w-xl text-[var(--muted)]">Keep the day moving with a clear view of every patient visit and status.</p>
             </div>
             <p className="text-sm text-[var(--muted)]">
               <span className="font-semibold text-[var(--ink)]">{counts.confirmed} confirmed</span> of {counts.all} visits
@@ -90,18 +86,18 @@ export default function Home() {
           </div>
         </section>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <section className="overflow-hidden rounded-xl border border-[var(--line)] bg-white" aria-labelledby="schedule-title">
+          <section className="schedula-panel" aria-labelledby="schedule-title">
             <div className="flex flex-col gap-4 border-b border-[var(--line)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <h2 id="schedule-title" className="font-semibold">
                 Schedule
               </h2>
-              <div className="flex gap-1 rounded-lg bg-stone-100 p-1" role="group" aria-label="Filter appointments">
+              <div className="schedula-segment" role="group" aria-label="Filter appointments">
                 {(["all", "confirmed", "pending"] as Filter[]).map((item) => (
                   <button
                     key={item}
                     type="button"
                     onClick={() => setFilter(item)}
-                    className={`rounded-md px-3 py-1.5 text-sm capitalize ${filter === item ? "bg-white font-medium shadow-sm" : "text-[var(--muted)] hover:text-[var(--ink)]"}`}
+                    className={`schedula-segment-item capitalize ${filter === item ? "schedula-segment-item-active" : ""}`}
                   >
                     {item} <span className="ml-1 text-xs">{counts[item]}</span>
                   </button>
@@ -131,7 +127,7 @@ export default function Home() {
                       type="button"
                       onClick={() => setSelectedId(item.id)}
                       aria-pressed={selectedId === item.id}
-                      className={`grid w-full grid-cols-[4.5rem_minmax(0,1fr)] gap-3 px-5 py-4 text-left hover:bg-emerald-50/40 ${selectedId === item.id ? "bg-emerald-50/60" : ""}`}
+                      className={`grid w-full grid-cols-[4.5rem_minmax(0,1fr)] gap-3 px-5 py-4 text-left hover:bg-[var(--brand-soft)]/40 ${selectedId === item.id ? "bg-[var(--brand-soft)]/70" : ""}`}
                     >
                       <time className="pt-1 text-sm font-medium text-[var(--muted)]">{formatTime(item.startTime)}</time>
                       <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -160,12 +156,12 @@ export default function Home() {
               </div>
             )}
           </section>
-          <aside className="rounded-xl border border-[var(--line)] bg-white p-5" aria-live="polite">
+          <aside className="schedula-card p-5" aria-live="polite">
             <p className="text-sm font-medium text-[var(--muted)]">Appointment details</p>
             {selected ? (
               <div className="mt-5">
                 <div className="flex items-center gap-3">
-                  <span className="grid size-11 place-items-center rounded-full bg-emerald-100 text-sm font-semibold text-[var(--brand-deep)]">
+                  <span className="grid size-11 place-items-center rounded-2xl bg-[var(--brand-soft)] text-sm font-semibold text-[var(--brand-deep)]">
                     {initials(selected.patientName)}
                   </span>
                   <div>
@@ -189,7 +185,7 @@ export default function Home() {
                     <dd className="mt-1 font-medium">{selected.doctorName}</dd>
                   </div>
                 </dl>
-                <button type="button" className="mt-7 w-full rounded-lg border border-[var(--line)] px-4 py-2.5 text-sm font-semibold hover:border-[var(--brand)] hover:text-[var(--brand)]">
+                <button type="button" className="schedula-btn-secondary mt-7 w-full">
                   Open patient record
                 </button>
               </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+import PortalMain from "@/components/portal/PortalMain";
 import DoctorCard from "@/features/doctors/components/DoctorCard";
 import { getDoctors } from "@/features/doctors/api/doctors";
 import type { Doctor } from "@/types/doctor";
@@ -23,31 +25,13 @@ export default function DoctorsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-6xl">
-        <header className="border-b border-[var(--line)] pb-7">
-          <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-xl bg-[var(--brand)] font-serif text-xl text-white">
-              S
-            </div>
-
-            <div>
-              <p className="text-lg font-semibold tracking-tight">Schedula</p>
-              <p className="text-sm text-[var(--muted)]">
-                Find a doctor
-              </p>
-            </div>
-          </div>
-        </header>
-
-        <section className="py-8" aria-labelledby="doctors-title">
-          <p className="text-sm font-medium text-[var(--brand)]">
-            Our specialists
-          </p>
+    <PortalMain maxWidth="6xl">
+      <section className="py-2" aria-labelledby="doctors-title">
+          <p className="schedula-eyebrow">Our specialists</p>
 
           <h1
             id="doctors-title"
-            className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl"
+            className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl"
           >
             Find a doctor
           </h1>
@@ -66,14 +50,14 @@ export default function DoctorsPage() {
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="h-64 animate-pulse rounded-xl bg-stone-200"
+                className="h-64 animate-pulse rounded-xl bg-[var(--line)]"
               />
             ))}
           </div>
         )}
 
         {status === "error" && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6" role="alert">
+          <div className="schedula-card border-red-200 bg-red-50 p-6" role="alert">
             <p className="font-medium text-red-800">
               We couldn&apos;t load the doctors.
             </p>
@@ -89,7 +73,7 @@ export default function DoctorsPage() {
         )}
 
         {status === "ready" && doctors.length === 0 && (
-          <div className="rounded-xl border border-[var(--line)] bg-white p-8 text-center">
+          <div className="schedula-panel p-8 text-center">
             <p className="font-medium">No doctors are currently available.</p>
           </div>
         )}
@@ -104,7 +88,6 @@ export default function DoctorsPage() {
             ))}
           </section>
         )}
-      </div>
-    </main>
+    </PortalMain>
   );
 }

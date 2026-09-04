@@ -2,10 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+
+import PageHeader from "@/components/portal/PageHeader";
+import PortalMain from "@/components/portal/PortalMain";
+import PrescriptionDetails from "@/features/prescriptions/components/PrescriptionDetails";
 import type {
   Appointment,
   AppointmentStatus,
 } from "@/types/appointment";
+import type { Prescription } from "@/types/prescription";
 
 type ApiResponse = {
   data: Appointment[];
@@ -77,6 +82,8 @@ export default function DoctorAppointmentDetailsPage({
   const [appointmentId, setAppointmentId] = useState("");
   const [appointment, setAppointment] =
     useState<Appointment | null>(null);
+  const [prescription, setPrescription] =
+    useState<Prescription | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -113,6 +120,15 @@ export default function DoctorAppointmentDetailsPage({
 
         if (!cancelled) {
           setAppointment(foundAppointment);
+
+          const prescriptionsResponse = await fetch(
+            `/api/prescriptions?appointmentId=${encodeURIComponent(foundAppointment.id)}`,
+          );
+
+          if (prescriptionsResponse.ok) {
+            const prescriptionsResult = await prescriptionsResponse.json();
+            setPrescription(prescriptionsResult.data?.[0] ?? null);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -212,70 +228,49 @@ export default function DoctorAppointmentDetailsPage({
 
   if (loading) {
     return (
-      <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-4xl">
-          <div className="h-8 w-48 animate-pulse rounded bg-stone-100" />
-          <div className="mt-6 h-80 animate-pulse rounded-xl bg-stone-100" />
-        </div>
-      </main>
+      <PortalMain maxWidth="4xl">
+        <div className="h-8 w-48 animate-pulse rounded bg-stone-100" />
+        <div className="mt-6 h-80 animate-pulse rounded-xl bg-stone-100" />
+      </PortalMain>
     );
   }
 
   if (error || !appointment) {
     return (
-      <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-4xl">
-          <Link
-            href="/doctor/appointments"
-            className="text-sm font-medium text-[var(--brand)] hover:underline"
-          >
-            ← Back to appointments
-          </Link>
+      <PortalMain maxWidth="4xl">
+        <PageHeader
+          eyebrow="Doctor portal"
+          title="Appointment details"
+          description="View and manage this appointment."
+        />
 
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-8 text-center">
-            <p className="font-semibold">
-              {error || "Appointment not found"}
-            </p>
-          </div>
+        <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-8 text-center">
+          <p className="font-semibold">
+            {error || "Appointment not found"}
+          </p>
         </div>
-      </main>
+      </PortalMain>
     );
   }
 
   const past = isPastAppointment(appointment);
 
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-4xl">
-        {/* Header */}
-        <header className="border-b border-[var(--line)] pb-6">
-          <Link
-            href="/doctor/appointments"
-            className="text-sm font-medium text-[var(--brand)] hover:underline"
+    <PortalMain maxWidth="4xl">
+      <PageHeader
+        eyebrow="Doctor portal"
+        title={appointment.patientName}
+        description="Appointment details"
+        action={
+          <span
+            className={`w-fit rounded-full px-3 py-1.5 text-sm font-medium ring-1 ring-inset ${getStatusClasses(
+              appointment.status,
+            )}`}
           >
-            ← Back to appointments
-          </Link>
-
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-[var(--brand)]">
-                Appointment details
-              </p>
-
-              <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-                {appointment.patientName}
-              </h1>
-            </div>
-
-            <span
-              className={`w-fit rounded-full px-3 py-1.5 text-sm font-medium ring-1 ring-inset ${getStatusClasses(
-                appointment.status,
-              )}`}
-            >
-              {appointment.status}
-            </span>
-          </div>
-        </header>
+            {appointment.status}
+          </span>
+        }
+      />
 
         {/* Appointment information */}
         <section className="mt-6 rounded-xl border border-[var(--line)] bg-white">
@@ -365,6 +360,36 @@ export default function DoctorAppointmentDetailsPage({
                 </p>
               </div>
             </Link>
+          </div>
+        </section>
+
+        <section className="mt-6 overflow-hidden rounded-xl border border-[var(--line)] bg-white">
+          <div className="flex flex-col gap-3 border-b border-[var(--line)] p-6 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Prescription</h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Prescription for this appointment.
+              </p>
+            </div>
+
+            {prescription && (
+              <Link
+                href={`/doctor/prescriptions#prescription-${prescription.id}`}
+                className="text-sm font-semibold text-[var(--brand)] hover:underline"
+              >
+                View on prescriptions page →
+              </Link>
+            )}
+          </div>
+
+          <div className="p-6">
+            {prescription ? (
+              <PrescriptionDetails prescription={prescription} />
+            ) : (
+              <p className="text-sm text-[var(--muted)]">
+                No prescription has been added for this appointment yet.
+              </p>
+            )}
           </div>
         </section>
 
@@ -471,8 +496,7 @@ export default function DoctorAppointmentDetailsPage({
             )}
           </div>
         </section>
-      </div>
-    </main>
+    </PortalMain>
   );
 }
 
