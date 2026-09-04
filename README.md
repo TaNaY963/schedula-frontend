@@ -730,7 +730,6 @@ B.Tech — Computer Science & Engineering
 * Express.js
 * REST APIs
 * MySQL
-* MongoDB
 * Tailwind CSS
 * Git & GitHub
 
