@@ -11,6 +11,9 @@ export type AppointmentStatus =
 
 export type AppointmentType = "video" | "in-person";
 
+/** regular = 15 min follow-up, normal = 30 min consultation */
+export type CheckupType = "regular" | "normal";
+
 export interface Appointment {
   id: string;
 
@@ -28,6 +31,7 @@ export interface Appointment {
   status: AppointmentStatus;
 
   reason?: string;
+  checkupType?: CheckupType;
 
   createdAt: string;
   updatedAt: string;
@@ -35,5 +39,7 @@ export interface Appointment {
   prescriptionAvailable?: boolean;
 
   rescheduledAt?: string;
+  cancelledAt?: string;
+  cancelledBy?: "patient" | "doctor";
 }
 

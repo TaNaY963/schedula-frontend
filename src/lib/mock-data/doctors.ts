@@ -3,6 +3,7 @@ import type { Doctor } from "@/types/doctor";
 import { DEMO_DOCTOR, DEMO_DOCTOR_2 } from "@/lib/mock-data/accounts";
 
 export const doctors: Doctor[] = [
+  // General Medicine
   {
     id: DEMO_DOCTOR.id,
     name: DEMO_DOCTOR.name,
@@ -15,7 +16,41 @@ export const doctors: Doctor[] = [
     address: DEMO_DOCTOR.address,
     consultationFee: 800,
     available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=640&q=80",
   },
+  {
+    id: "doc-004",
+    name: "Dr. Rohan Iyer",
+    email: "rohan.iyer@schedula.test",
+    phone: "9876543213",
+    specialty: "General Medicine",
+    qualification: "MBBS, DNB Family Medicine",
+    experienceYears: 14,
+    registrationNumber: "MED12348",
+    address: "Bangalore",
+    consultationFee: 900,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-005",
+    name: "Dr. Meera Nair",
+    email: "meera.nair@schedula.test",
+    phone: "9876543214",
+    specialty: "General Medicine",
+    qualification: "MBBS, MD Internal Medicine",
+    experienceYears: 9,
+    registrationNumber: "MED12349",
+    address: "Bangalore",
+    consultationFee: 850,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=640&q=80",
+  },
+
+  // Dermatology
   {
     id: DEMO_DOCTOR_2.id,
     name: DEMO_DOCTOR_2.name,
@@ -28,7 +63,41 @@ export const doctors: Doctor[] = [
     address: DEMO_DOCTOR_2.address,
     consultationFee: 1000,
     available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=640&q=80",
   },
+  {
+    id: "doc-006",
+    name: "Dr. Lisa Fernandes",
+    email: "lisa.fernandes@schedula.test",
+    phone: "9876543215",
+    specialty: "Dermatology",
+    qualification: "MBBS, MD Dermatology",
+    experienceYears: 11,
+    registrationNumber: "MED12350",
+    address: "Bangalore",
+    consultationFee: 1100,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1651008376812-b90baee37c1f?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-007",
+    name: "Dr. Arjun Kapoor",
+    email: "arjun.kapoor@schedula.test",
+    phone: "9876543216",
+    specialty: "Dermatology",
+    qualification: "MBBS, DVD",
+    experienceYears: 7,
+    registrationNumber: "MED12351",
+    address: "Bangalore",
+    consultationFee: 950,
+    available: false,
+    imageUrl:
+      "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=640&q=80",
+  },
+
+  // Cardiology
   {
     id: "doc-003",
     name: "Dr. Sarah Wilson",
@@ -40,6 +109,226 @@ export const doctors: Doctor[] = [
     registrationNumber: "MED12347",
     address: "Bangalore",
     consultationFee: 1200,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-008",
+    name: "Dr. Vikram Seth",
+    email: "vikram.seth@schedula.test",
+    phone: "9876543217",
+    specialty: "Cardiology",
+    qualification: "MBBS, DM Cardiology",
+    experienceYears: 16,
+    registrationNumber: "MED12352",
+    address: "Bangalore",
+    consultationFee: 1500,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-009",
+    name: "Dr. Priya Menon",
+    email: "priya.menon@schedula.test",
+    phone: "9876543218",
+    specialty: "Cardiology",
+    qualification: "MBBS, MD, Fellowship in Interventional Cardiology",
+    experienceYears: 13,
+    registrationNumber: "MED12353",
+    address: "Bangalore",
+    consultationFee: 1350,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1527613426441-4da17471b7d5?auto=format&fit=crop&w=640&q=80",
+  },
+
+  // Pediatrics
+  {
+    id: "doc-010",
+    name: "Dr. Kavita Desai",
+    email: "kavita.desai@schedula.test",
+    phone: "9876543219",
+    specialty: "Pediatrics",
+    qualification: "MBBS, MD Pediatrics",
+    experienceYears: 10,
+    registrationNumber: "MED12354",
+    address: "Bangalore",
+    consultationFee: 900,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-011",
+    name: "Dr. Aditya Rao",
+    email: "aditya.rao@schedula.test",
+    phone: "9876543220",
+    specialty: "Pediatrics",
+    qualification: "MBBS, DCH",
+    experienceYears: 8,
+    registrationNumber: "MED12355",
+    address: "Bangalore",
+    consultationFee: 850,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-012",
+    name: "Dr. Sneha Pillai",
+    email: "sneha.pillai@schedula.test",
+    phone: "9876543221",
+    specialty: "Pediatrics",
+    qualification: "MBBS, MD Pediatrics, Fellowship in Neonatology",
+    experienceYears: 12,
+    registrationNumber: "MED12356",
+    address: "Bangalore",
+    consultationFee: 950,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=640&q=80",
+  },
+
+  // Orthopedics
+  {
+    id: "doc-013",
+    name: "Dr. Karan Malhotra",
+    email: "karan.malhotra@schedula.test",
+    phone: "9876543222",
+    specialty: "Orthopedics",
+    qualification: "MBBS, MS Orthopedics",
+    experienceYears: 15,
+    registrationNumber: "MED12357",
+    address: "Bangalore",
+    consultationFee: 1100,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-014",
+    name: "Dr. Ananya Krishnan",
+    email: "ananya.krishnan@schedula.test",
+    phone: "9876543223",
+    specialty: "Orthopedics",
+    qualification: "MBBS, DNB Orthopedics",
+    experienceYears: 9,
+    registrationNumber: "MED12358",
+    address: "Bangalore",
+    consultationFee: 1000,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-015",
+    name: "Dr. Rishi Verma",
+    email: "rishi.verma@schedula.test",
+    phone: "9876543224",
+    specialty: "Orthopedics",
+    qualification: "MBBS, MS Orthopedics, Fellowship in Sports Medicine",
+    experienceYears: 11,
+    registrationNumber: "MED12359",
+    address: "Bangalore",
+    consultationFee: 1200,
     available: false,
+    imageUrl:
+      "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=640&q=80",
+  },
+
+  // Neurology
+  {
+    id: "doc-016",
+    name: "Dr. Nisha Bhat",
+    email: "nisha.bhat@schedula.test",
+    phone: "9876543225",
+    specialty: "Neurology",
+    qualification: "MBBS, MD Neurology",
+    experienceYears: 14,
+    registrationNumber: "MED12360",
+    address: "Bangalore",
+    consultationFee: 1300,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1651008376812-b90baee37c1f?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-017",
+    name: "Dr. Hemant Joshi",
+    email: "hemant.joshi@schedula.test",
+    phone: "9876543226",
+    specialty: "Neurology",
+    qualification: "MBBS, DM Neurology",
+    experienceYears: 17,
+    registrationNumber: "MED12361",
+    address: "Bangalore",
+    consultationFee: 1450,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-018",
+    name: "Dr. Pooja Saxena",
+    email: "pooja.saxena@schedula.test",
+    phone: "9876543227",
+    specialty: "Neurology",
+    qualification: "MBBS, MD Neurology",
+    experienceYears: 10,
+    registrationNumber: "MED12362",
+    address: "Bangalore",
+    consultationFee: 1250,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1527613426441-4da17471b7d5?auto=format&fit=crop&w=640&q=80",
+  },
+
+  // Ophthalmology
+  {
+    id: "doc-019",
+    name: "Dr. Sanjay Mehta",
+    email: "sanjay.mehta@schedula.test",
+    phone: "9876543228",
+    specialty: "Ophthalmology",
+    qualification: "MBBS, MS Ophthalmology",
+    experienceYears: 13,
+    registrationNumber: "MED12363",
+    address: "Bangalore",
+    consultationFee: 1000,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-020",
+    name: "Dr. Ritu Chawla",
+    email: "ritu.chawla@schedula.test",
+    phone: "9876543229",
+    specialty: "Ophthalmology",
+    qualification: "MBBS, DNB Ophthalmology",
+    experienceYears: 8,
+    registrationNumber: "MED12364",
+    address: "Bangalore",
+    consultationFee: 950,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=640&q=80",
+  },
+  {
+    id: "doc-021",
+    name: "Dr. Varun Khanna",
+    email: "varun.khanna@schedula.test",
+    phone: "9876543230",
+    specialty: "Ophthalmology",
+    qualification: "MBBS, MS Ophthalmology, Fellowship in Retina",
+    experienceYears: 11,
+    registrationNumber: "MED12365",
+    address: "Bangalore",
+    consultationFee: 1150,
+    available: true,
+    imageUrl:
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=640&q=80",
   },
 ];

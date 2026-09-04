@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import FlashBanner from "@/components/portal/FlashBanner";
 import PageHeader from "@/components/portal/PageHeader";
 import PortalMain from "@/components/portal/PortalMain";
 import PrescriptionDetails from "@/features/prescriptions/components/PrescriptionDetails";
+import { getAppointmentStartDateTime } from "@/lib/formatters/appointments";
 import type {
   Appointment,
   AppointmentStatus,
@@ -76,18 +78,43 @@ function isPastAppointment(appointment: Appointment) {
   return appointmentDateTime < new Date();
 }
 
+function sortAppointmentsByStart(appointments: Appointment[]) {
+  return [...appointments].sort(
+    (first, second) =>
+      getAppointmentStartDateTime(first).getTime() -
+      getAppointmentStartDateTime(second).getTime(),
+  );
+}
+
+function getNextPendingAppointment(
+  appointments: Appointment[],
+  currentAppointmentId: string,
+) {
+  const pendingAppointments = sortAppointmentsByStart(
+    appointments.filter(
+      (item) => item.status === "pending" && item.id !== currentAppointmentId,
+    ),
+  );
+
+  return pendingAppointments[0] ?? null;
+}
+
 export default function DoctorAppointmentDetailsPage({
   params,
 }: Props) {
   const [appointmentId, setAppointmentId] = useState("");
   const [appointment, setAppointment] =
     useState<Appointment | null>(null);
+  const [allAppointments, setAllAppointments] = useState<Appointment[]>(
+    [],
+  );
   const [prescription, setPrescription] =
     useState<Prescription | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
+  const [confirmMessage, setConfirmMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -120,6 +147,8 @@ export default function DoctorAppointmentDetailsPage({
 
         if (!cancelled) {
           setAppointment(foundAppointment);
+          setAllAppointments(result.data);
+          setConfirmMessage("");
 
           const prescriptionsResponse = await fetch(
             `/api/prescriptions?appointmentId=${encodeURIComponent(foundAppointment.id)}`,
@@ -181,6 +210,17 @@ export default function DoctorAppointmentDetailsPage({
       const result = await response.json();
 
       setAppointment(result.data);
+      setAllAppointments((current) =>
+        current.map((item) =>
+          item.id === result.data.id ? result.data : item,
+        ),
+      );
+
+      if (newStatus === "confirmed") {
+        setConfirmMessage(
+          `Appointment with ${result.data.patientName} confirmed.`,
+        );
+      }
     } catch (err) {
       console.error(err);
 
@@ -226,6 +266,20 @@ export default function DoctorAppointmentDetailsPage({
     updateStatus("cancelled");
   }
 
+  const nextPendingAppointment = useMemo(
+    () =>
+      appointment
+        ? getNextPendingAppointment(allAppointments, appointment.id)
+        : null,
+    [allAppointments, appointment],
+  );
+
+  const pendingRequestCount = useMemo(
+    () =>
+      allAppointments.filter((item) => item.status === "pending").length,
+    [allAppointments],
+  );
+
   if (loading) {
     return (
       <PortalMain maxWidth="4xl">
@@ -262,15 +316,34 @@ export default function DoctorAppointmentDetailsPage({
         title={appointment.patientName}
         description="Appointment details"
         action={
-          <span
-            className={`w-fit rounded-full px-3 py-1.5 text-sm font-medium ring-1 ring-inset ${getStatusClasses(
-              appointment.status,
-            )}`}
-          >
-            {appointment.status}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/doctor/appointments"
+              className="schedula-btn-secondary shrink-0 whitespace-nowrap"
+            >
+              Back
+            </Link>
+
+            <span
+              className={`w-fit rounded-full px-3 py-1.5 text-sm font-medium ring-1 ring-inset ${getStatusClasses(
+                appointment.status,
+              )}`}
+            >
+              {appointment.status}
+            </span>
+          </div>
         }
       />
+
+      {confirmMessage && (
+        <div className="mt-6">
+          <FlashBanner
+            message={confirmMessage}
+            variant="success"
+            onDismiss={() => setConfirmMessage("")}
+          />
+        </div>
+      )}
 
         {/* Appointment information */}
         <section className="mt-6 rounded-xl border border-[var(--line)] bg-white">
@@ -327,13 +400,26 @@ export default function DoctorAppointmentDetailsPage({
                 {appointment.reason || "General consultation"}
               </p>
             </div>
+
+            {appointment.checkupType && (
+              <div>
+                <p className="text-sm text-[var(--muted)]">
+                  Checkup type
+                </p>
+                <p className="mt-1 font-medium">
+                  {appointment.checkupType === "regular"
+                    ? "Regular checkup (15 min)"
+                    : "Normal checkup (30 min)"}
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* Patient details */}
+        {/* Patient history */}
         <section className="mt-6 rounded-xl border border-[var(--line)] bg-white">
           <div className="border-b border-[var(--line)] px-5 py-4">
-            <h2 className="font-semibold">Patient details</h2>
+            <h2 className="font-semibold">Patient history</h2>
           </div>
 
           <div className="p-5">
@@ -421,6 +507,37 @@ export default function DoctorAppointmentDetailsPage({
                   Decline Appointment
                 </button>
               </>
+            )}
+
+            {appointment.status === "confirmed" && confirmMessage && (
+              <div className="flex w-full flex-wrap items-center gap-3">
+                <Link
+                  href="/doctor/appointments"
+                  className="schedula-btn-secondary"
+                >
+                  Back to appointments
+                </Link>
+
+                {nextPendingAppointment ? (
+                  <Link
+                    href={`/doctor/appointments/${nextPendingAppointment.id}`}
+                    className="rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+                  >
+                    Next request: {nextPendingAppointment.patientName} →
+                  </Link>
+                ) : (
+                  <p className="text-sm text-[var(--muted)]">
+                    No more pending requests.
+                  </p>
+                )}
+
+                {pendingRequestCount > 0 && nextPendingAppointment && (
+                  <p className="text-sm text-[var(--muted)]">
+                    {pendingRequestCount} request
+                    {pendingRequestCount === 1 ? "" : "s"} remaining
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Confirmed / Upcoming */}

@@ -104,7 +104,7 @@ export default function PatientDetailsPage() {
       <PortalMain maxWidth="6xl">
         <PageHeader
           eyebrow="Doctor portal"
-          title="Patient Details"
+          title="Patient history"
           description="Patient information and appointment history."
         />
 
@@ -121,15 +121,24 @@ export default function PatientDetailsPage() {
     <PortalMain maxWidth="6xl">
       <PageHeader
         eyebrow="Doctor portal"
-        title="Patient Details"
+        title="Patient history"
         description="Patient information and appointment history."
         action={
-          <Link
-            href={`/doctor/appointments/${appointment.id}`}
-            className="schedula-btn-secondary shrink-0 whitespace-nowrap"
-          >
-            Back to appointment
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/doctor/dashboard"
+              className="schedula-btn-secondary shrink-0 whitespace-nowrap"
+            >
+              Dashboard
+            </Link>
+
+            <Link
+              href={`/doctor/appointments/${appointment.id}`}
+              className="schedula-btn-secondary shrink-0 whitespace-nowrap"
+            >
+              Back to appointment
+            </Link>
+          </div>
         }
       />
 

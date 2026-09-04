@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import PageHeader from "@/components/portal/PageHeader";
 import PortalMain from "@/components/portal/PortalMain";
+import FlashBanner from "@/components/portal/FlashBanner";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -150,6 +152,34 @@ export default function DoctorCalendarPage() {
             cancelled = true;
         };
     }, []);
+
+    useEffect(() => {
+        if (!actionMessage) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            setActionMessage("");
+        }, 5000);
+
+        return () => {
+            window.clearTimeout(timeout);
+        };
+    }, [actionMessage]);
+
+    useEffect(() => {
+        if (!actionError) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            setActionError("");
+        }, 7000);
+
+        return () => {
+            window.clearTimeout(timeout);
+        };
+    }, [actionError]);
 
     const events = useMemo(() => {
         const appointmentEvents = appointments.map(
@@ -461,6 +491,14 @@ export default function DoctorCalendarPage() {
                 eyebrow="Doctor portal"
                 title="Calendar"
                 description="Manage appointments and view your availability."
+                action={
+                    <Link
+                        href="/doctor/dashboard"
+                        className="schedula-btn-secondary shrink-0 whitespace-nowrap"
+                    >
+                        Dashboard
+                    </Link>
+                }
             />
 
                 <section className="mt-6 rounded-xl border border-[var(--line)] bg-white px-4 py-3">
@@ -560,20 +598,24 @@ export default function DoctorCalendarPage() {
                 </div>
 
                 {actionMessage && (
-                    <div
-                        role="status"
-                        className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
-                    >
-                        {actionMessage}
+                    <div className="mt-4">
+                        <FlashBanner
+                            message={actionMessage}
+                            variant="success"
+                            onDismiss={() => setActionMessage("")}
+                            autoHideMs={0}
+                        />
                     </div>
                 )}
 
                 {actionError && (
-                    <div
-                        role="alert"
-                        className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-                    >
-                        {actionError}
+                    <div className="mt-4">
+                        <FlashBanner
+                            message={actionError}
+                            variant="error"
+                            onDismiss={() => setActionError("")}
+                            autoHideMs={0}
+                        />
                     </div>
                 )}
 

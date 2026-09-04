@@ -7,12 +7,15 @@ import { useAuth } from "@/context/AuthContext";
 import PageHeader from "@/components/portal/PageHeader";
 import PortalMain from "@/components/portal/PortalMain";
 import RebookAppointmentLink from "@/features/booking/components/RebookAppointmentLink";
+import SpecialtyCard from "@/features/doctors/components/SpecialtyCard";
+import { getDoctors } from "@/features/doctors/api/doctors";
 import {
   formatAppointmentDate,
   formatAppointmentTime,
   getAppointmentStatusClasses,
 } from "@/lib/formatters/appointments";
 import type { Appointment } from "@/types/appointment";
+import type { Doctor } from "@/types/doctor";
 import type { Prescription } from "@/types/prescription";
 
 type ApiResponse = {
@@ -23,12 +26,13 @@ export default function UserDashboardPage() {
     const { user } = useAuth();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+    const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function loadDashboardData() {
             try {
-                const [appointmentsResponse, prescriptionsResponse] =
+                const [appointmentsResponse, prescriptionsResponse, doctorsResponse] =
                     await Promise.all([
                         fetch("/api/appointments"),
                         user
@@ -36,6 +40,7 @@ export default function UserDashboardPage() {
                                   `/api/prescriptions?patientId=${encodeURIComponent(user.id)}`,
                               )
                             : Promise.resolve(null),
+                        getDoctors(),
                     ]);
 
                 if (!appointmentsResponse.ok) {
@@ -51,6 +56,8 @@ export default function UserDashboardPage() {
                     const prescriptionsResult = await prescriptionsResponse.json();
                     setPrescriptions(prescriptionsResult.data ?? []);
                 }
+
+                setDoctors(doctorsResponse);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -107,6 +114,21 @@ export default function UserDashboardPage() {
         .slice(0, 3);
 
     const firstName = user?.name?.split(" ")[0] || "there";
+
+    const specialties = useMemo(
+        () => [...new Set(doctors.map((doctor) => doctor.specialty))].sort(),
+        [doctors],
+    );
+
+    const specialtyCounts = useMemo(() => {
+        return specialties.reduce<Record<string, number>>((counts, specialty) => {
+            counts[specialty] = doctors.filter(
+                (doctor) => doctor.specialty === specialty,
+            ).length;
+
+            return counts;
+        }, {});
+    }, [doctors, specialties]);
 
     return (
         <PortalMain maxWidth="6xl">
@@ -168,6 +190,48 @@ export default function UserDashboardPage() {
                             View prescriptions →
                         </Link>
                     </div>
+                </section>
+
+                <section className="mt-6">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <h2 className="text-xl font-semibold">
+                                Find a doctor by specialization
+                            </h2>
+                            <p className="mt-1 text-sm text-[var(--muted)]">
+                                Choose a department to browse doctors and book
+                                directly.
+                            </p>
+                        </div>
+
+                        <Link
+                            href="/doctors"
+                            className="text-sm font-semibold text-[var(--brand)] hover:underline"
+                        >
+                            View all doctors →
+                        </Link>
+                    </div>
+
+                    {loading ? (
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {[1, 2, 3].map((item) => (
+                                <div
+                                    key={item}
+                                    className="h-16 animate-pulse rounded-xl bg-stone-100"
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {specialties.map((specialty) => (
+                                <SpecialtyCard
+                                    key={specialty}
+                                    specialty={specialty}
+                                    doctorCount={specialtyCounts[specialty]}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </section>
 
                 {/* Next appointment */}

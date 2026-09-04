@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import FlashBanner from "@/components/portal/FlashBanner";
 import { saveUser } from "@/lib/storage/users";
 
 type FormErrors = {
@@ -24,6 +25,7 @@ export default function RegisterForm() {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   function updateField(
     field: keyof typeof form,
@@ -89,7 +91,13 @@ export default function RegisterForm() {
         password: form.password,
       });
 
-      router.push("/login?role=user");
+      setSuccessMessage(
+        "Account created successfully. Redirecting you to login...",
+      );
+
+      window.setTimeout(() => {
+        router.push("/login?role=user");
+      }, 2000);
     } catch (error) {
       setErrors({
         form:
@@ -104,6 +112,15 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      {successMessage && (
+        <FlashBanner
+          message={successMessage}
+          variant="success"
+          onDismiss={() => setSuccessMessage("")}
+          autoHideMs={0}
+        />
+      )}
+
       {errors.form && (
         <p
           role="alert"

@@ -232,14 +232,6 @@ export default function DoctorAppointmentsPage() {
         eyebrow="Doctor portal"
         title="Appointments"
         description="Manage your patient appointments and consultation schedule."
-        action={
-          <Link
-            href="/doctor/calendar"
-            className="inline-flex w-fit items-center rounded-lg bg-[var(--brand)] px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-          >
-            Open calendar →
-          </Link>
-        }
       />
 
         {/* Summary cards */}

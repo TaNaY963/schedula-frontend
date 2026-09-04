@@ -10,4 +10,5 @@ export type Doctor = {
   address: string;
   consultationFee: number;
   available: boolean;
+  imageUrl?: string;
 };

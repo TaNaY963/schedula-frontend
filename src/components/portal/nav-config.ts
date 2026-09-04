@@ -9,6 +9,5 @@ export const userNavItems: PortalNavItem[] = [
 export const doctorNavItems: PortalNavItem[] = [
   { label: "Dashboard", href: "/doctor/dashboard" },
   { label: "Appointments", href: "/doctor/appointments", matchPrefix: true },
-  { label: "Calendar", href: "/doctor/calendar" },
   { label: "Prescriptions", href: "/doctor/prescriptions", matchPrefix: true },
 ];

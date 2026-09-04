@@ -1,4 +1,4 @@
-import type { AppointmentStatus } from "@/types/appointment";
+import type { Appointment, AppointmentStatus, CheckupType } from "@/types/appointment";
 
 type DateFormatStyle = "short" | "long";
 
@@ -38,6 +38,16 @@ export function formatAppointmentStatus(status: AppointmentStatus) {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
+export function formatCheckupType(checkupType?: CheckupType) {
+  if (!checkupType) {
+    return "Consultation";
+  }
+
+  return checkupType === "regular"
+    ? "Regular checkup (15 min)"
+    : "Normal checkup (30 min)";
+}
+
 export function getAppointmentStatusClasses(status: AppointmentStatus) {
   switch (status) {
     case "confirmed":
@@ -61,4 +71,22 @@ export function getAppointmentStatusClasses(status: AppointmentStatus) {
     default:
       return "bg-slate-50 text-slate-600 ring-slate-200";
   }
+}
+
+export function getAppointmentStartDateTime(appointment: Appointment) {
+  return new Date(`${appointment.date}T${appointment.startTime}:00`);
+}
+
+export function canPatientCancelAppointment(appointment: Appointment) {
+  const cancellableStatuses: AppointmentStatus[] = [
+    "pending",
+    "confirmed",
+    "upcoming",
+  ];
+
+  if (!cancellableStatuses.includes(appointment.status)) {
+    return false;
+  }
+
+  return new Date() < getAppointmentStartDateTime(appointment);
 }

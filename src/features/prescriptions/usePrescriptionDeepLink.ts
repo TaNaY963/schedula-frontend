@@ -38,6 +38,7 @@ export function usePrescriptionDeepLink(
   options?: UsePrescriptionDeepLinkOptions,
 ) {
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const handledHashRef = useRef<string | null>(null);
   const onMatchRef = useRef(options?.onMatch);
   onMatchRef.current = options?.onMatch;
 
@@ -49,6 +50,13 @@ export function usePrescriptionDeepLink(
     const prescriptionId = getPrescriptionIdFromHash();
 
     if (!prescriptionId) {
+      handledHashRef.current = null;
+      return;
+    }
+
+    const currentHash = window.location.hash;
+
+    if (handledHashRef.current === currentHash) {
       return;
     }
 
@@ -59,6 +67,8 @@ export function usePrescriptionDeepLink(
     if (!prescription) {
       return;
     }
+
+    handledHashRef.current = currentHash;
 
     const scrollTimeout = window.setTimeout(() => {
       if (!onMatchRef.current) {

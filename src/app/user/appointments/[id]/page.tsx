@@ -9,6 +9,7 @@ import PageHeader from "@/components/portal/PageHeader";
 import PortalMain from "@/components/portal/PortalMain";
 import RebookAppointmentLink from "@/features/booking/components/RebookAppointmentLink";
 import PrescriptionDetails from "@/features/prescriptions/components/PrescriptionDetails";
+import { canPatientCancelAppointment } from "@/lib/formatters/appointments";
 import type {
   Appointment,
   AppointmentStatus,
@@ -155,6 +156,7 @@ export default function UserAppointmentDetailsPage() {
         body: JSON.stringify({
           id: appointment.id,
           status: "cancelled",
+          cancelledBy: "patient",
         }),
       });
 
@@ -205,10 +207,15 @@ export default function UserAppointmentDetailsPage() {
     );
   }
 
-  const canCancel =
-    appointment.status === "pending" ||
-    appointment.status === "confirmed" ||
-    appointment.status === "upcoming";
+  const canCancel = canPatientCancelAppointment(appointment);
+  const hasStarted =
+    appointment.status !== "cancelled" &&
+    appointment.status !== "completed" &&
+    appointment.status !== "missed" &&
+    !canCancel &&
+    (appointment.status === "pending" ||
+      appointment.status === "confirmed" ||
+      appointment.status === "upcoming");
 
   return (
     <PortalMain maxWidth="3xl">
@@ -297,6 +304,15 @@ export default function UserAppointmentDetailsPage() {
               >
                 Cancel Appointment
               </button>
+            </div>
+          )}
+
+          {hasStarted && (
+            <div className="border-t border-[var(--line)] p-6">
+              <p className="text-sm text-[var(--muted)]">
+                This appointment can no longer be cancelled because the
+                scheduled time has passed.
+              </p>
             </div>
           )}
 
